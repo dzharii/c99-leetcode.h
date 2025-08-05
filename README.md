@@ -19,3 +19,11 @@ int main()
 }
 
 ```
+
+
+TODO: 
+
+lc00118_pascals_triangle_tests.c
+is a good start, but I think to make it more easier, for instance, the test should parse 
+input from string maybe
+2. make it datadriven. 
