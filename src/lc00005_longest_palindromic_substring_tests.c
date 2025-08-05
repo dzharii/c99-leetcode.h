@@ -1,13 +1,3 @@
-# TCC
-
-https://download.savannah.gnu.org/releases/tinycc/
-https://github.com/TinyCC/tinycc
-
-
-
-tcc -run lc00005_longest_palindromic_substring_tests.c 
-
-```c
 #include "a_leetcode.h"
 
 int main()
@@ -17,5 +7,3 @@ int main()
     printf("Digits in 'five' = %d", lc_integers_count_digits(five));
     return 0;
 }
-
-```
