@@ -39,3 +39,13 @@ void lc_print_integer_array(const unsigned char* src_array, size_t src_array_siz
     }
     printf("]\n");
 }
+
+// counts set bits (1) using bitwise AND operation
+int lc_integers_count_set_bits(int number) {
+    int count = 0;
+    while (number) {
+        count += number & 1;
+        number >>= 1;
+    }
+    return count;
+}
