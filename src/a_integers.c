@@ -212,3 +212,169 @@ void leaf_values_destroy(leaf_values *lv)
         free(lv);
     }
 }
+
+/**
+ * @struct Reasonable_Date
+ * @brief Simple date representation with year, month, and day components.
+ */
+typedef struct
+{
+    uint32_t year;
+    uint32_t month;
+    uint32_t day;
+} Reasonable_Date;
+
+/**
+ * @typedef Leet_Result
+ * @brief Result code for utility functions.
+ *
+ * LEET_RESULT_SUCCESS equals 0 and indicates success.
+ * LEET_RESULT_FAILED equals 1 and indicates failure.
+ */
+typedef int Leet_Result;
+enum
+{
+    LEET_RESULT_SUCCESS = 0,
+    LEET_RESULT_FAILED = 1
+};
+
+/**
+ * @brief Parses an unsigned 32-bit integer from an ASCII decimal substring.
+ *
+ * @param input Pointer to the ASCII buffer.
+ * @param input_size Number of characters to parse from input.
+ * @param out Pointer to the result variable.
+ * @return Leet_Result LEET_RESULT_SUCCESS on success, LEET_RESULT_FAILED on invalid input.
+ */
+Leet_Result lc_integer_parse_uint32_from_string(const char *input, size_t input_size, uint32_t *out)
+{
+    if (!input || !out || input_size == 0)
+        return LEET_RESULT_FAILED;
+
+    uint32_t value = 0;
+
+    for (size_t i = 0; i < input_size; i++)
+    {
+        uint8_t ch = (uint8_t)input[i];
+        if (ch < '0' || ch > '9')
+            return LEET_RESULT_FAILED;
+
+        uint32_t digit = (uint32_t)(ch - '0');
+        value = value * 10u + digit;
+    }
+
+    *out = value;
+    return LEET_RESULT_SUCCESS;
+}
+
+/**
+ * @brief Deprecated misspelled alias kept for compatibility.
+ *
+ * Prefer lc_integer_parse_uint32_from_string instead.
+ */
+Leet_Result lc_integer_parase_uint32_from_string(const char *input, size_t input_size, uint32_t *out)
+{
+    return lc_integer_parse_uint32_from_string(input, input_size, out);
+}
+
+/**
+ * @brief Parses a date string in YYYY-MM-DD format into a Reasonable_Date.
+ *
+ * Performs basic sanity checks on ranges, including leap-aware month lengths.
+ *
+ * @param date_string Zero-terminated string in the format YYYY-MM-DD.
+ * @param out Pointer to the output Reasonable_Date.
+ * @return Leet_Result LEET_RESULT_SUCCESS on success, LEET_RESULT_FAILED on invalid input.
+ */
+Leet_Result lc_reasonable_date_parse_from_string(const char *date_string, Reasonable_Date *out)
+{
+    if (!date_string || !out)
+        return LEET_RESULT_FAILED;
+
+    size_t len = strlen(date_string);
+    if (len != 10)
+        return LEET_RESULT_FAILED;
+    if (date_string[4] != '-' || date_string[7] != '-')
+        return LEET_RESULT_FAILED;
+
+    if (lc_integer_parse_uint32_from_string(date_string, 4, &out->year) != LEET_RESULT_SUCCESS)
+        return LEET_RESULT_FAILED;
+
+    if (lc_integer_parse_uint32_from_string(date_string + 5, 2, &out->month) != LEET_RESULT_SUCCESS)
+        return LEET_RESULT_FAILED;
+
+    if (lc_integer_parse_uint32_from_string(date_string + 8, 2, &out->day) != LEET_RESULT_SUCCESS)
+        return LEET_RESULT_FAILED;
+
+    if (out->month < 1 || out->month > 12)
+        return LEET_RESULT_FAILED;
+
+    uint32_t dim = 0;
+    {
+        static const uint8_t mdays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+        uint8_t leap_days = (out->month == 2 && (((out->year % 4 == 0) && (out->year % 100 != 0)) || (out->year % 400 == 0))) ? 1 : 0;
+        dim = (uint32_t)mdays[out->month - 1] + (uint32_t)leap_days;
+    }
+
+    if (out->day < 1 || out->day > dim)
+        return LEET_RESULT_FAILED;
+
+    return LEET_RESULT_SUCCESS;
+}
+
+/**
+ * @brief Determines whether a given year is a leap year.
+ *
+ * @param year Four-digit year.
+ * @return bool true if the year is a leap year, false otherwise.
+ */
+bool lc_date_is_leap_year(uint32_t year)
+{
+    return ((year % 4u == 0u) && (year % 100u != 0u)) || (year % 400u == 0u);
+}
+
+/**
+ * @brief Returns the number of days in a given month of a given year.
+ *
+ * @param year Four-digit year.
+ * @param month Month number in range 1..12.
+ * @return uint32_t Number of days in the specified month, or 0 if month is out of range.
+ */
+uint32_t lc_date_days_in_month(uint32_t year, uint32_t month)
+{
+    static const uint8_t mdays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (month < 1u || month > 12u)
+        return 0u;
+
+    uint8_t leap_days = (month == 2u && lc_date_is_leap_year(year)) ? 1u : 0u;
+    return (uint32_t)mdays[month - 1u] + (uint32_t)leap_days;
+}
+
+/**
+ * @brief Computes the number of days elapsed since 1971-01-01 for a given date.
+ *
+ * The epoch used is 1971-01-01 which yields 0 for that date.
+ * The function assumes the input date fields describe a valid date.
+ *
+ * @param d Pointer to a Reasonable_Date.
+ * @return uint32_t Number of days since 1971-01-01.
+ */
+uint32_t lc_date_days_since_1971(const Reasonable_Date *d)
+{
+    uint32_t days = 0;
+
+    for (uint32_t y = 1971u; y < d->year; ++y)
+    {
+        days += lc_date_is_leap_year(y) ? 366u : 365u;
+    }
+
+    for (uint32_t m = 1u; m < d->month; ++m)
+    {
+        days += lc_date_days_in_month(d->year, m);
+    }
+
+    days += (d->day - 1u);
+    return days;
+}
+
+
