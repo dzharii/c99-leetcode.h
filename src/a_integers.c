@@ -377,4 +377,16 @@ uint32_t lc_date_days_since_1971(const Reasonable_Date *d)
     return days;
 }
 
+/**
+ * @brief Swaps two uint32_t values in place.
+ *
+ * @param a Pointer to the first value.
+ * @param b Pointer to the second value.
+ */
+inline static void lc_util_swap_uint32(uint32_t *a, uint32_t *b)
+{
+    uint32_t tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
 
