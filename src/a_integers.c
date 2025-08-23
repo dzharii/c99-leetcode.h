@@ -390,3 +390,8 @@ inline static void lc_util_swap_uint32(uint32_t *a, uint32_t *b)
     *b = tmp;
 }
 
+
+
+inline static bool lc_integers_is_even(int num) {
+    return num % 2 == 0;
+}
