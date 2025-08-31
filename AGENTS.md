@@ -59,8 +59,8 @@ required documentation present, coding style followed, no unintended allocations
 ## Build, Test, and Development Commands
 - Build (PowerShell): `pwsh -ExecutionPolicy Bypass -File .\do-build.ps1 -Arch x64`
   - Sets up MSVC environment, builds `nob.exe`, and compiles tests into `build\`.
-- Quick build (CMD wrapper): ` .\do-build.cmd`
-- Run tests: execute produced binaries in `build\` (example: ` .\build\<test>.exe`). Exit code reflects success/failure.
+ - Quick build (CMD wrapper): ` .\do-build.cmd`
+ - Run tests: ` .\build\tests-c99-leetcode.exe` (single test binary). Exit code reflects success/failure.
 
 ## Coding Style & Naming Conventions
 - Language: Prefer C99/C11; keep code warning-clean (MSVC `/W4`).
@@ -83,4 +83,3 @@ required documentation present, coding style followed, no unintended allocations
 ## Security & Configuration Tips
 - Requires Windows MSVC toolchain; Visual Studio Build Tools with C++ workload. The script auto-detects `VsDevCmd.bat`; pass `-Arch x64|x86|arm64` as needed.
 - No external network dependencies; doctest is vendored. Keep contributions header-only unless justified.
-
