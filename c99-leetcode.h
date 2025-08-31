@@ -140,6 +140,10 @@ enum { C99LC_RESULT_SUCCESS = 0, C99LC_RESULT_FAILED = 1 };
 // Parsing helpers
 C99_LEETCODE_PUBLIC_DECL c99lc_result  c99lc_integer_parse_uint32_from_string(const char* input, size_t input_size, uint32_t* out);
 
+// Roman numerals
+C99_LEETCODE_PUBLIC_DECL int          c99lc_roman_char_to_int(char ch);
+C99_LEETCODE_PUBLIC_DECL int          c99lc_roman_to_int(const char* s);
+
 // Lightweight dynamic array for ints
 typedef struct c99lc_leaf_values {
     size_t size;
@@ -325,6 +329,37 @@ C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_integer_parse_uint32_from_string(cons
     }
     *out = value;
     return C99LC_RESULT_SUCCESS;
+}
+
+// Roman numerals
+C99_LEETCODE_PUBLIC_DEF int c99lc_roman_char_to_int(char ch)
+{
+    switch (ch) {
+        case 'I': return 1;
+        case 'V': return 5;
+        case 'X': return 10;
+        case 'L': return 50;
+        case 'C': return 100;
+        case 'D': return 500;
+        case 'M': return 1000;
+        default:  return 0;
+    }
+}
+
+C99_LEETCODE_PUBLIC_DEF int c99lc_roman_to_int(const char* s)
+{
+    if (!s) return 0;
+    size_t len = 0; while (s[len] != '\0') ++len;
+    if (len == 0) return 0;
+    int total = 0;
+    int prev = 0;
+    for (size_t i = len; i > 0; ) {
+        --i;
+        int v = c99lc_roman_char_to_int(s[i]);
+        if (v < prev) total -= v; else total += v;
+        prev = v;
+    }
+    return total;
 }
 
 // Dynamic array

@@ -116,3 +116,26 @@ TEST_CASE("leaf_values dynamic array push/destroy") {
     CHECK(lv->items[2] == 30);
     c99lc_leaf_values_destroy(lv);
 }
+
+TEST_CASE("roman numeral char mapping") {
+    CHECK(c99lc_roman_char_to_int('I') == 1);
+    CHECK(c99lc_roman_char_to_int('V') == 5);
+    CHECK(c99lc_roman_char_to_int('X') == 10);
+    CHECK(c99lc_roman_char_to_int('L') == 50);
+    CHECK(c99lc_roman_char_to_int('C') == 100);
+    CHECK(c99lc_roman_char_to_int('D') == 500);
+    CHECK(c99lc_roman_char_to_int('M') == 1000);
+    CHECK(c99lc_roman_char_to_int('A') == 0);
+}
+
+TEST_CASE("roman to int typical cases") {
+    CHECK(c99lc_roman_to_int("III") == 3);
+    CHECK(c99lc_roman_to_int("IV") == 4);
+    CHECK(c99lc_roman_to_int("IX") == 9);
+    CHECK(c99lc_roman_to_int("LVIII") == 58);
+    CHECK(c99lc_roman_to_int("MCMXCIV") == 1994);
+    CHECK(c99lc_roman_to_int("XLII") == 42);
+    CHECK(c99lc_roman_to_int("CM") == 900);
+    CHECK(c99lc_roman_to_int("CD") == 400);
+    CHECK(c99lc_roman_to_int("") == 0);
+}
