@@ -31,15 +31,15 @@ extern "C" {
 
 /* Public declaration macro: resolves to extern or extern "C" for C++. */
 #ifndef C99_LEETCODE_PUBLIC_DECL
-#  ifdef C99_LEETCODE_STATIC
-#    define C99_LEETCODE_PUBLIC_DECL static
-#  else
-#    ifdef __cplusplus
-#      define C99_LEETCODE_PUBLIC_DECL extern "C"
-#    else
-#      define C99_LEETCODE_PUBLIC_DECL extern
-#    endif
-#  endif
+#ifdef C99_LEETCODE_STATIC
+#define C99_LEETCODE_PUBLIC_DECL static
+#else
+#ifdef __cplusplus
+#define C99_LEETCODE_PUBLIC_DECL extern "C"
+#else
+#define C99_LEETCODE_PUBLIC_DECL extern
+#endif
+#endif
 #endif
 
 /* Standard integer and boolean types */
@@ -48,13 +48,13 @@ extern "C" {
 
 /* Optional configuration hooks for future allocation needs. */
 #ifndef C99_LEETCODE_NO_ALLOC
-#  include <stddef.h>
-#  ifndef C99_LEETCODE_MALLOC
-#    include <stdlib.h>
-#    define C99_LEETCODE_MALLOC(ctx, size)        ((void)(ctx), malloc(size))
-#    define C99_LEETCODE_FREE(ctx, ptr)           ((void)(ctx), free(ptr))
-#    define C99_LEETCODE_REALLOC(ctx, ptr, size)  ((void)(ctx), realloc(ptr, size))
-#  endif
+#include <stddef.h>
+#ifndef C99_LEETCODE_MALLOC
+#include <stdlib.h>
+#define C99_LEETCODE_MALLOC(ctx, size) ((void)(ctx), malloc(size))
+#define C99_LEETCODE_FREE(ctx, ptr) ((void)(ctx), free(ptr))
+#define C99_LEETCODE_REALLOC(ctx, ptr, size) ((void)(ctx), realloc(ptr, size))
+#endif
 #endif
 
 /* Public API */
@@ -79,11 +79,14 @@ C99_LEETCODE_PUBLIC_DECL size_t c99lc_integers_count_digits(int x);
 
 /* Decomposes source into decimal digits written LSB-first into dest_array.
    Writes up to dest_array_size digits; negative numbers produce absolute digits. */
-C99_LEETCODE_PUBLIC_DECL void c99lc_integers_parse_digits_to_array(int source, unsigned char* dest_array, size_t dest_array_size);
+C99_LEETCODE_PUBLIC_DECL void c99lc_integers_parse_digits_to_array(int source,
+    unsigned char* dest_array,
+    size_t dest_array_size);
 
 /* Reconstructs an integer from digits stored LSB-first in src_array.
    Returns 0 if src_array is NULL or src_array_size is 0. */
-C99_LEETCODE_PUBLIC_DECL int c99lc_integers_join_digits_from_array(const unsigned char* src_array, size_t src_array_size);
+C99_LEETCODE_PUBLIC_DECL int c99lc_integers_join_digits_from_array(const unsigned char* src_array,
+    size_t src_array_size);
 
 /* Counts set bits (population count) in number treated as unsigned.
    Works for all int values by casting to unsigned during the count. */
@@ -99,7 +102,8 @@ C99_LEETCODE_PUBLIC_DECL void c99lc_digits_increment(unsigned char* digits, size
 
 /* Sums the decimal digits in digits[0..digits_size).
    Returns 0 if digits is NULL or digits_size is 0. */
-C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_digits_sum(const unsigned char* digits, size_t digits_size);
+C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_digits_sum(const unsigned char* digits,
+    size_t digits_size);
 
 #ifndef C99_LEETCODE_NO_STDIO
 /* Prints digits as "[d0, d1, ...]\n" to stdout.
@@ -125,7 +129,9 @@ enum { C99LC_RESULT_SUCCESS = 0, C99LC_RESULT_FAILED = 1 };
 
 /* Parses ASCII decimal digits from input[0..input_size) into *out.
    Fails on non-digits or empty input; returns a C99LC_RESULT_* code. */
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_integer_parse_uint32_from_string(const char* input, size_t input_size, uint32_t* out);
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_integer_parse_uint32_from_string(const char* input,
+    size_t input_size,
+    uint32_t* out);
 
 /* Roman numerals */
 
@@ -179,14 +185,15 @@ C99_LEETCODE_PUBLIC_DECL uint32_t c99lc_date_days_since_1971(const c99lc_reasona
 
 /* Parses "YYYY-MM-DD" into out and validates month and day ranges.
    Returns C99LC_RESULT_SUCCESS on success, otherwise C99LC_RESULT_FAILED. */
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_reasonable_date_parse_from_string(const char* date_string, c99lc_reasonable_date* out);
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_reasonable_date_parse_from_string(
+    const char* date_string,
+    c99lc_reasonable_date* out);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
 #endif /* C99_LEETCODE_H_INCLUDE */
-
 
 /*=============================================================================
    IMPLEMENTATION
@@ -195,24 +202,22 @@ C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_reasonable_date_parse_from_string(co
 
 /* Definition macro: empty for global symbols, or 'static' when C99_LEETCODE_STATIC. */
 #ifndef C99_LEETCODE_PUBLIC_DEF
-#  ifdef C99_LEETCODE_STATIC
-#    define C99_LEETCODE_PUBLIC_DEF static
-#  else
-#    define C99_LEETCODE_PUBLIC_DEF
-#  endif
+#ifdef C99_LEETCODE_STATIC
+#define C99_LEETCODE_PUBLIC_DEF static
+#else
+#define C99_LEETCODE_PUBLIC_DEF
+#endif
 #endif
 
 /* Private namespace prefix 'c99lc__' for internal symbols. */
-static const char c99lc__hello_literal[]   = "Hello, World!";
+static const char c99lc__hello_literal[] = "Hello, World!";
 static const char c99lc__version_literal[] = "0.1";
 
-C99_LEETCODE_PUBLIC_DEF const char* c99lc_helloworld(void)
-{
+C99_LEETCODE_PUBLIC_DEF const char* c99lc_helloworld(void) {
     return c99lc__hello_literal;
 }
 
-C99_LEETCODE_PUBLIC_DEF int c99lc_helloworld_into(char* out, size_t out_cap)
-{
+C99_LEETCODE_PUBLIC_DEF int c99lc_helloworld_into(char* out, size_t out_cap) {
     /* Fast-fail if buffer cannot hold even the terminator. */
     const bool has_writable_buffer = (out != NULL) && (out_cap > 0u);
     if (!has_writable_buffer) return 0;
@@ -230,16 +235,14 @@ C99_LEETCODE_PUBLIC_DEF int c99lc_helloworld_into(char* out, size_t out_cap)
     return (int)write_index;
 }
 
-C99_LEETCODE_PUBLIC_DEF const char* c99lc_version(void)
-{
+C99_LEETCODE_PUBLIC_DEF const char* c99lc_version(void) {
     return c99lc__version_literal;
 }
 
 /* ---- Integer utilities implementation ----------------------------------- */
 #include <stddef.h> /* size_t */
 
-C99_LEETCODE_PUBLIC_DEF size_t c99lc_integers_count_digits(int x)
-{
+C99_LEETCODE_PUBLIC_DEF size_t c99lc_integers_count_digits(int x) {
     if (x == 0) return 1u;
 
     size_t digit_count = 0u;
@@ -252,8 +255,9 @@ C99_LEETCODE_PUBLIC_DEF size_t c99lc_integers_count_digits(int x)
     return digit_count;
 }
 
-C99_LEETCODE_PUBLIC_DEF void c99lc_integers_parse_digits_to_array(int source, unsigned char* dest_array, size_t dest_array_size)
-{
+C99_LEETCODE_PUBLIC_DEF void c99lc_integers_parse_digits_to_array(int source,
+    unsigned char* dest_array,
+    size_t dest_array_size) {
     if (!dest_array || dest_array_size == 0u) return;
 
     for (size_t i = 0; i < dest_array_size; ++i) {
@@ -265,8 +269,8 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_integers_parse_digits_to_array(int source, un
     }
 }
 
-C99_LEETCODE_PUBLIC_DEF int c99lc_integers_join_digits_from_array(const unsigned char* src_array, size_t src_array_size)
-{
+C99_LEETCODE_PUBLIC_DEF int c99lc_integers_join_digits_from_array(const unsigned char* src_array,
+    size_t src_array_size) {
     if (!src_array || src_array_size == 0u) return 0;
 
     int value = 0;
@@ -277,8 +281,7 @@ C99_LEETCODE_PUBLIC_DEF int c99lc_integers_join_digits_from_array(const unsigned
     return value;
 }
 
-C99_LEETCODE_PUBLIC_DEF int c99lc_integers_count_set_bits(int number)
-{
+C99_LEETCODE_PUBLIC_DEF int c99lc_integers_count_set_bits(int number) {
     unsigned int v = (unsigned int)number;
     int bits_set_count = 0;
     while (v != 0u) {
@@ -288,18 +291,16 @@ C99_LEETCODE_PUBLIC_DEF int c99lc_integers_count_set_bits(int number)
     return bits_set_count;
 }
 
-C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_integers_is_even(int num)
-{
+C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_integers_is_even(int num) {
     const bool is_even = ((num % 2) == 0);
     return (unsigned char)(is_even ? 1u : 0u);
 }
 
-C99_LEETCODE_PUBLIC_DEF void c99lc_digits_increment(unsigned char* digits, size_t digits_size)
-{
+C99_LEETCODE_PUBLIC_DEF void c99lc_digits_increment(unsigned char* digits, size_t digits_size) {
     if (!digits || digits_size == 0u) return;
 
     unsigned char carry = 1u;
-    for (size_t i = digits_size; i-- > 0u && carry != 0u; ) {
+    for (size_t i = digits_size; i-- > 0u && carry != 0u;) {
         const unsigned char sum = (unsigned char)(digits[i] + carry);
         const bool overflowed_base10 = (sum >= 10u);
         digits[i] = overflowed_base10 ? 0u : sum;
@@ -307,20 +308,23 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_digits_increment(unsigned char* digits, size_
     }
 }
 
-C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_digits_sum(const unsigned char* digits, size_t digits_size)
-{
+C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_digits_sum(const unsigned char* digits,
+    size_t digits_size) {
     if (!digits || digits_size == 0u) return 0u;
 
     unsigned int total = 0u;
-    for (size_t i = 0; i < digits_size; ++i) total += digits[i];
+    for (size_t i = 0; i < digits_size; ++i)
+        total += digits[i];
     return (unsigned char)total;
 }
 
 #ifndef C99_LEETCODE_NO_STDIO
-#  include <stdio.h>
-C99_LEETCODE_PUBLIC_DEF void c99lc_print_integer_array(const unsigned char* a, size_t n)
-{
-    if (!a) { fputs("[]\n", stdout); return; }
+#include <stdio.h>
+C99_LEETCODE_PUBLIC_DEF void c99lc_print_integer_array(const unsigned char* a, size_t n) {
+    if (!a) {
+        fputs("[]\n", stdout);
+        return;
+    }
 
     fputc('[', stdout);
     for (size_t index = 0; index < n; ++index) {
@@ -333,24 +337,22 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_print_integer_array(const unsigned char* a, s
 #endif
 
 /* Arrays and utilities */
-C99_LEETCODE_PUBLIC_DEF void c99lc_array_int_reverse_in_place(int* array, size_t array_size)
-{
+C99_LEETCODE_PUBLIC_DEF void c99lc_array_int_reverse_in_place(int* array, size_t array_size) {
     if (!array || array_size == 0u) return;
 
-    int* left  = array;
+    int* left = array;
     int* right = array + array_size - 1u;
 
     while (left < right) {
         const int tmp = *left;
-        *left  = *right;
+        *left = *right;
         *right = tmp;
         ++left;
         --right;
     }
 }
 
-C99_LEETCODE_PUBLIC_DEF void c99lc_util_swap_u32(uint32_t* a, uint32_t* b)
-{
+C99_LEETCODE_PUBLIC_DEF void c99lc_util_swap_u32(uint32_t* a, uint32_t* b) {
     if (!a || !b) return;
     const uint32_t tmp = *a;
     *a = *b;
@@ -358,8 +360,10 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_util_swap_u32(uint32_t* a, uint32_t* b)
 }
 
 /* Parsing */
-C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_integer_parse_uint32_from_string(const char* input, size_t input_size, uint32_t* out)
-{
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_integer_parse_uint32_from_string(const char* input,
+    size_t input_size,
+    uint32_t* out) {
+
     const bool inputs_valid = (input != NULL) && (out != NULL) && (input_size > 0u);
     if (!inputs_valid) return C99LC_RESULT_FAILED;
 
@@ -378,32 +382,39 @@ C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_integer_parse_uint32_from_string(cons
 }
 
 /* Roman numerals */
-C99_LEETCODE_PUBLIC_DEF int c99lc_roman_char_to_int(char ch)
-{
+C99_LEETCODE_PUBLIC_DEF int c99lc_roman_char_to_int(char ch) {
     switch (ch) {
-        case 'I': return 1;
-        case 'V': return 5;
-        case 'X': return 10;
-        case 'L': return 50;
-        case 'C': return 100;
-        case 'D': return 500;
-        case 'M': return 1000;
-        default:  return 0;
+        case 'I':
+            return 1;
+        case 'V':
+            return 5;
+        case 'X':
+            return 10;
+        case 'L':
+            return 50;
+        case 'C':
+            return 100;
+        case 'D':
+            return 500;
+        case 'M':
+            return 1000;
+        default:
+            return 0;
     }
 }
 
-C99_LEETCODE_PUBLIC_DEF int c99lc_roman_to_int(const char* s)
-{
+C99_LEETCODE_PUBLIC_DEF int c99lc_roman_to_int(const char* s) {
     if (!s) return 0;
 
     size_t length = 0u;
-    while (s[length] != '\0') ++length;
+    while (s[length] != '\0')
+        ++length;
     if (length == 0u) return 0;
 
     int running_total = 0;
     int prev_value = 0;
 
-    for (size_t i = length; i > 0u; ) {
+    for (size_t i = length; i > 0u;) {
         --i;
         const int current_value = c99lc_roman_char_to_int(s[i]);
         const bool is_subtractive = (current_value < prev_value);
@@ -414,9 +425,9 @@ C99_LEETCODE_PUBLIC_DEF int c99lc_roman_to_int(const char* s)
 }
 
 /* Dynamic array */
-C99_LEETCODE_PUBLIC_DEF c99lc_leaf_values* c99lc_leaf_values_create(size_t initial_capacity)
-{
-    c99lc_leaf_values* lv = (c99lc_leaf_values*)C99_LEETCODE_MALLOC(NULL, sizeof(c99lc_leaf_values));
+C99_LEETCODE_PUBLIC_DEF c99lc_leaf_values* c99lc_leaf_values_create(size_t initial_capacity) {
+    c99lc_leaf_values* lv =
+        (c99lc_leaf_values*)C99_LEETCODE_MALLOC(NULL, sizeof(c99lc_leaf_values));
     if (!lv) return NULL;
 
     lv->size = 0u;
@@ -430,8 +441,7 @@ C99_LEETCODE_PUBLIC_DEF c99lc_leaf_values* c99lc_leaf_values_create(size_t initi
     return lv;
 }
 
-C99_LEETCODE_PUBLIC_DEF void c99lc_leaf_values_push(c99lc_leaf_values* lv, int item)
-{
+C99_LEETCODE_PUBLIC_DEF void c99lc_leaf_values_push(c99lc_leaf_values* lv, int item) {
     if (!lv) return;
 
     const bool needs_growth = (lv->size == lv->capacity);
@@ -446,27 +456,24 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_leaf_values_push(c99lc_leaf_values* lv, int i
     lv->items[lv->size++] = item;
 }
 
-C99_LEETCODE_PUBLIC_DEF void c99lc_leaf_values_destroy(c99lc_leaf_values* lv)
-{
+C99_LEETCODE_PUBLIC_DEF void c99lc_leaf_values_destroy(c99lc_leaf_values* lv) {
     if (!lv) return;
     C99_LEETCODE_FREE(NULL, lv->items);
     C99_LEETCODE_FREE(NULL, lv);
 }
 
 /* Date helpers */
-C99_LEETCODE_PUBLIC_DEF bool c99lc_date_is_leap_year(uint32_t year)
-{
-    const bool divisible_by_4   = (year % 4u)   == 0u;
+C99_LEETCODE_PUBLIC_DEF bool c99lc_date_is_leap_year(uint32_t year) {
+    const bool divisible_by_4 = (year % 4u) == 0u;
     const bool divisible_by_100 = (year % 100u) == 0u;
     const bool divisible_by_400 = (year % 400u) == 0u;
 
     return (divisible_by_4 && !divisible_by_100) || divisible_by_400;
 }
 
-C99_LEETCODE_PUBLIC_DEF uint32_t c99lc_date_days_in_month(uint32_t year, uint32_t month)
-{
+C99_LEETCODE_PUBLIC_DEF uint32_t c99lc_date_days_in_month(uint32_t year, uint32_t month) {
     static const unsigned char days_in_month_lookup[12] =
-        {31,28,31,30,31,30,31,31,30,31,30,31};
+        {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
     const bool month_out_of_range = (month < 1u) || (month > 12u);
     if (month_out_of_range) return 0u;
@@ -475,8 +482,7 @@ C99_LEETCODE_PUBLIC_DEF uint32_t c99lc_date_days_in_month(uint32_t year, uint32_
     return (uint32_t)days_in_month_lookup[month - 1u] + (uint32_t)(is_february_leap ? 1u : 0u);
 }
 
-C99_LEETCODE_PUBLIC_DEF uint32_t c99lc_date_days_since_1971(const c99lc_reasonable_date* d)
-{
+C99_LEETCODE_PUBLIC_DEF uint32_t c99lc_date_days_since_1971(const c99lc_reasonable_date* d) {
     if (!d) return 0u;
 
     uint32_t days_total = 0u;
@@ -491,12 +497,14 @@ C99_LEETCODE_PUBLIC_DEF uint32_t c99lc_date_days_since_1971(const c99lc_reasonab
     return days_total;
 }
 
-C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_reasonable_date_parse_from_string(const char* date_string, c99lc_reasonable_date* out)
-{
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_reasonable_date_parse_from_string(
+    const char* date_string,
+    c99lc_reasonable_date* out) {
     if (!date_string || !out) return C99LC_RESULT_FAILED;
 
     size_t len = 0u;
-    while (date_string[len] != '\0') ++len;
+    while (date_string[len] != '\0')
+        ++len;
 
     const bool length_is_iso10 = (len == 10u);
     if (!length_is_iso10) return C99LC_RESULT_FAILED;
@@ -504,9 +512,14 @@ C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_reasonable_date_parse_from_string(con
     const bool has_separators = (date_string[4] == '-') && (date_string[7] == '-');
     if (!has_separators) return C99LC_RESULT_FAILED;
 
-    if (c99lc_integer_parse_uint32_from_string(date_string, 4, &out->year) != C99LC_RESULT_SUCCESS) return C99LC_RESULT_FAILED;
-    if (c99lc_integer_parse_uint32_from_string(date_string + 5u, 2, &out->month) != C99LC_RESULT_SUCCESS) return C99LC_RESULT_FAILED;
-    if (c99lc_integer_parse_uint32_from_string(date_string + 8u, 2, &out->day) != C99LC_RESULT_SUCCESS) return C99LC_RESULT_FAILED;
+    if (c99lc_integer_parse_uint32_from_string(date_string, 4, &out->year) != C99LC_RESULT_SUCCESS)
+        return C99LC_RESULT_FAILED;
+    if (c99lc_integer_parse_uint32_from_string(date_string + 5u, 2, &out->month) !=
+        C99LC_RESULT_SUCCESS)
+        return C99LC_RESULT_FAILED;
+    if (c99lc_integer_parse_uint32_from_string(date_string + 8u, 2, &out->day) !=
+        C99LC_RESULT_SUCCESS)
+        return C99LC_RESULT_FAILED;
 
     const bool month_valid = (out->month >= 1u) && (out->month <= 12u);
     if (!month_valid) return C99LC_RESULT_FAILED;
@@ -519,7 +532,6 @@ C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_reasonable_date_parse_from_string(con
 }
 
 #endif /* C99_LEETCODE_IMPLEMENTATION */
-
 
 /*
 ------------------------------------------------------------------------------
