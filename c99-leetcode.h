@@ -1,68 +1,25 @@
-/* c99-leetcode.h - v0.1 - tiny stb-style single-header "Hello, World!" library
+/* c99-leetcode.h - v0.1 - single-header C99 utilities
    Public Domain or MIT, your choice, see end of file.
 
-   Minimal example of the stb single-header pattern.
-   No allocations, no dependencies beyond the C standard library.
+   Overview
+     Tiny stb-style header providing small, dependency-free helpers commonly
+     needed in coding challenge style problems: integer digit routines,
+     bit counting and parity, array reversal, Roman numeral conversion,
+     ASCII decimal parsing, a minimal int vector, and simple date helpers.
 
-   DOCUMENTATION
+   Design
+     - Single-header; include this file everywhere.
+     - In one translation unit: #define C99_LEETCODE_IMPLEMENTATION before include.
+     - Optional C99_LEETCODE_STATIC makes definitions 'static' in that TU.
+     - Optional C99_LEETCODE_NO_STDIO omits printf-based helpers.
+     - No hidden global state. Allocation hooks are provided but optional.
 
-     Overview:
-       A trivial API that returns "Hello, World!" either as a const string
-       or by writing it into a caller-provided buffer.
-
-     Defines that control this header:
-       C99_LEETCODE_STATIC
-           Define before including the *implementation* to make function
-           definitions 'static' so each including .c/.cpp gets its own copy.
-       C99_LEETCODE_IMPLEMENTATION
-           Define in exactly one .c/.cpp before including this header to
-           compile the implementation.
-       C99_LEETCODE_NO_STDIO
-           Omit stdio-based sample helpers if you add any that use stdio.
-
-     Build:
-       In one source file:
-           #define C99_LEETCODE_IMPLEMENTATION
-           #include "c99-leetcode.h"
-       In all other files:
-           #include "c99-leetcode.h"
-
-     API:
-       C99_LEETCODE_PUBLIC_DECL const char* c99lc_helloworld(void);
-         Returns a pointer to a constant, null-terminated "Hello, World!".
-
-       C99_LEETCODE_PUBLIC_DECL int c99lc_helloworld_into(char* out, size_t out_cap);
-         Writes "Hello, World!" into 'out' with null-termination.
-         Returns the number of bytes written excluding the terminator.
-         Writes nothing and returns 0 if out is NULL or out_cap == 0.
-
-     Integer utilities (from todo.md):
-       C99_LEETCODE_PUBLIC_DECL size_t c99lc_integers_count_digits(int x);
-         Returns the number of decimal digits in x (e.g., 0 -> 1, 90991 -> 5).
-
-       C99_LEETCODE_PUBLIC_DECL void c99lc_integers_parse_digits_to_array(int source,
-           unsigned char* dest_array, size_t dest_array_size);
-         Writes decimal digits of 'source' into dest_array in reverse (LSB first).
-
-       C99_LEETCODE_PUBLIC_DECL int c99lc_integers_join_digits_from_array(
-           const unsigned char* src_array, size_t src_array_size);
-         Reconstructs an integer from digits stored LSB-first in src_array.
-
-       C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_integers_is_even(int num);
-         Returns 1 if even, 0 if odd.
-
-       C99_LEETCODE_PUBLIC_DECL int c99lc_integers_count_set_bits(int number);
-         Counts set bits (population count) in the binary representation of number.
-
-       C99_LEETCODE_PUBLIC_DECL void c99lc_digits_increment(unsigned char* digits, size_t digits_size);
-         In-place +1 of big-endian decimal digit array (digits in [0,9], MSB at index 0).
-
-       C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_digits_sum(const unsigned char* digits, size_t digits_size);
-         Sums decimal digits; returns value in [0, 9*digits_size].
-
-       Optional stdio helper (omitted when C99_LEETCODE_NO_STDIO):
-         C99_LEETCODE_PUBLIC_DECL void c99lc_print_integer_array(const unsigned char* a, size_t n);
-         Prints [d0, d1, ...] to stdout.
+   Build
+     In one source file:
+       #define C99_LEETCODE_IMPLEMENTATION
+       #include "c99-leetcode.h"
+     In all other files:
+       #include "c99-leetcode.h"
 */
 
 #ifndef C99_LEETCODE_H_INCLUDE
@@ -101,63 +58,128 @@ extern "C" {
 #endif
 
 /* Public API */
-C99_LEETCODE_PUBLIC_DECL const char*    c99lc_helloworld(void);                                    /* constant "Hello, World!" */
-C99_LEETCODE_PUBLIC_DECL int            c99lc_helloworld_into(char* out, size_t out_cap);          /* write "Hello, World!" */
 
-/* Version query, handy for diagnostics. */
-C99_LEETCODE_PUBLIC_DECL const char*    c99lc_version(void);                                       /* library version string */
+/* Returns a pointer to a constant, null-terminated "Hello, World!" string.
+   Storage duration is static; caller must not free the returned pointer. */
+C99_LEETCODE_PUBLIC_DECL const char* c99lc_helloworld(void);
 
-/* Integer utilities (public declarations) */
-C99_LEETCODE_PUBLIC_DECL size_t         c99lc_integers_count_digits(int x);                        /* count decimal digits */
-C99_LEETCODE_PUBLIC_DECL void           c99lc_integers_parse_digits_to_array(                      /* split into digits LSB-first */
-                                         int source, unsigned char* dest_array, size_t dest_array_size);
-C99_LEETCODE_PUBLIC_DECL int            c99lc_integers_join_digits_from_array(                     /* join digits to int */
-                                         const unsigned char* src_array, size_t src_array_size);
-C99_LEETCODE_PUBLIC_DECL int            c99lc_integers_count_set_bits(int number);                 /* popcount */
-C99_LEETCODE_PUBLIC_DECL unsigned char  c99lc_integers_is_even(int num);                           /* 1 if even, else 0 */
-C99_LEETCODE_PUBLIC_DECL void           c99lc_digits_increment(unsigned char* digits, size_t digits_size); /* +1 in place */
-C99_LEETCODE_PUBLIC_DECL unsigned char  c99lc_digits_sum(const unsigned char* digits, size_t digits_size); /* sum of digits */
+/* Copies "Hello, World!" into out and null-terminates.
+   Returns bytes written excluding the terminator, or 0 if out is NULL or out_cap is 0. */
+C99_LEETCODE_PUBLIC_DECL int c99lc_helloworld_into(char* out, size_t out_cap);
+
+/* Returns the library version string such as "0.1".
+   String has static storage duration; caller must not free it. */
+C99_LEETCODE_PUBLIC_DECL const char* c99lc_version(void);
+
+/* Integer utilities */
+
+/* Counts the number of decimal digits in x.
+   Example: 0 -> 1, 90991 -> 5; ignores the sign for negative inputs. */
+C99_LEETCODE_PUBLIC_DECL size_t c99lc_integers_count_digits(int x);
+
+/* Decomposes source into decimal digits written LSB-first into dest_array.
+   Writes up to dest_array_size digits; negative numbers produce absolute digits. */
+C99_LEETCODE_PUBLIC_DECL void c99lc_integers_parse_digits_to_array(int source, unsigned char* dest_array, size_t dest_array_size);
+
+/* Reconstructs an integer from digits stored LSB-first in src_array.
+   Returns 0 if src_array is NULL or src_array_size is 0. */
+C99_LEETCODE_PUBLIC_DECL int c99lc_integers_join_digits_from_array(const unsigned char* src_array, size_t src_array_size);
+
+/* Counts set bits (population count) in number treated as unsigned.
+   Works for all int values by casting to unsigned during the count. */
+C99_LEETCODE_PUBLIC_DECL int c99lc_integers_count_set_bits(int number);
+
+/* Returns 1 if num is even, otherwise 0.
+   Handles negative and positive values consistently. */
+C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_integers_is_even(int num);
+
+/* Increments a big-endian decimal digit array in place by 1.
+   Digits must be in [0,9]; carry ripples from the least significant end. */
+C99_LEETCODE_PUBLIC_DECL void c99lc_digits_increment(unsigned char* digits, size_t digits_size);
+
+/* Sums the decimal digits in digits[0..digits_size).
+   Returns 0 if digits is NULL or digits_size is 0. */
+C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_digits_sum(const unsigned char* digits, size_t digits_size);
+
 #ifndef C99_LEETCODE_NO_STDIO
-C99_LEETCODE_PUBLIC_DECL void           c99lc_print_integer_array(const unsigned char* a, size_t n); /* print [d0, d1, ...] */
+/* Prints digits as "[d0, d1, ...]\n" to stdout.
+   Safe to call with NULL pointer (prints an empty list). */
+C99_LEETCODE_PUBLIC_DECL void c99lc_print_integer_array(const unsigned char* a, size_t n);
 #endif
 
-/* Arrays and small utilities */
-C99_LEETCODE_PUBLIC_DECL void           c99lc_array_int_reverse_in_place(int* array, size_t array_size); /* reverse array */
-C99_LEETCODE_PUBLIC_DECL void           c99lc_util_swap_u32(uint32_t* a, uint32_t* b);             /* swap 32-bit values */
+/* Arrays and utilities */
+
+/* Reverses array[0..array_size) in place.
+   No-op if array is NULL or array_size is 0. */
+C99_LEETCODE_PUBLIC_DECL void c99lc_array_int_reverse_in_place(int* array, size_t array_size);
+
+/* Swaps two 32-bit unsigned integers pointed to by a and b.
+   No-op if either pointer is NULL. */
+C99_LEETCODE_PUBLIC_DECL void c99lc_util_swap_u32(uint32_t* a, uint32_t* b);
 
 /* Result code */
 typedef int c99lc_result;
 enum { C99LC_RESULT_SUCCESS = 0, C99LC_RESULT_FAILED = 1 };
 
 /* Parsing helpers */
-C99_LEETCODE_PUBLIC_DECL c99lc_result   c99lc_integer_parse_uint32_from_string(                    /* parse decimal uint32 */
-                                         const char* input, size_t input_size, uint32_t* out);
+
+/* Parses ASCII decimal digits from input[0..input_size) into *out.
+   Fails on non-digits or empty input; returns a C99LC_RESULT_* code. */
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_integer_parse_uint32_from_string(const char* input, size_t input_size, uint32_t* out);
 
 /* Roman numerals */
-C99_LEETCODE_PUBLIC_DECL int            c99lc_roman_char_to_int(char ch);                          /* I,V,X,L,C,D,M->value */
-C99_LEETCODE_PUBLIC_DECL int            c99lc_roman_to_int(const char* s);                         /* parse roman number */
+
+/* Maps a single Roman numeral character to its integer value.
+   Returns 0 for unsupported characters. */
+C99_LEETCODE_PUBLIC_DECL int c99lc_roman_char_to_int(char ch);
+
+/* Converts a Roman numeral string using standard subtractive notation.
+   Returns 0 for NULL or for a string that contributes no valid symbols. */
+C99_LEETCODE_PUBLIC_DECL int c99lc_roman_to_int(const char* s);
 
 /* Lightweight dynamic array for ints */
+
 typedef struct c99lc_leaf_values {
     size_t size;
     size_t capacity;
-    int*   items;
+    int* items;
 } c99lc_leaf_values;
-C99_LEETCODE_PUBLIC_DECL c99lc_leaf_values* c99lc_leaf_values_create(size_t initial_capacity);     /* new vector */
-C99_LEETCODE_PUBLIC_DECL void               c99lc_leaf_values_push(c99lc_leaf_values* lv, int item); /* push back */
-C99_LEETCODE_PUBLIC_DECL void               c99lc_leaf_values_destroy(c99lc_leaf_values* lv);      /* free vector */
+
+/* Allocates a growable array of int with initial_capacity (1 if 0).
+   Returns NULL on allocation failure. */
+C99_LEETCODE_PUBLIC_DECL c99lc_leaf_values* c99lc_leaf_values_create(size_t initial_capacity);
+
+/* Appends item to the end of the vector, growing capacity as needed.
+   If reallocation fails the push is dropped. */
+C99_LEETCODE_PUBLIC_DECL void c99lc_leaf_values_push(c99lc_leaf_values* lv, int item);
+
+/* Frees the vector and its storage.
+   Safe to call with NULL. */
+C99_LEETCODE_PUBLIC_DECL void c99lc_leaf_values_destroy(c99lc_leaf_values* lv);
 
 /* Date helpers */
+
 typedef struct c99lc_reasonable_date {
     uint32_t year;
     uint32_t month;
     uint32_t day;
 } c99lc_reasonable_date;
-C99_LEETCODE_PUBLIC_DECL bool           c99lc_date_is_leap_year(uint32_t year);                    /* Gregorian leap rule */
-C99_LEETCODE_PUBLIC_DECL uint32_t       c99lc_date_days_in_month(uint32_t year, uint32_t month);   /* 0 if invalid month */
-C99_LEETCODE_PUBLIC_DECL uint32_t       c99lc_date_days_since_1971(const c99lc_reasonable_date* d);/* days since 1971-01-01 */
-C99_LEETCODE_PUBLIC_DECL c99lc_result   c99lc_reasonable_date_parse_from_string(                   /* parse YYYY-MM-DD */
-                                         const char* date_string, c99lc_reasonable_date* out);
+
+/* Returns true if year is a Gregorian leap year.
+   Applies the 4, 100, 400 rule. */
+C99_LEETCODE_PUBLIC_DECL bool c99lc_date_is_leap_year(uint32_t year);
+
+/* Returns the number of days in the given month of year.
+   Returns 0 if month is out of range 1..12. */
+C99_LEETCODE_PUBLIC_DECL uint32_t c99lc_date_days_in_month(uint32_t year, uint32_t month);
+
+/* Counts days since 1971-01-01 for date d.
+   Returns 0 if d is NULL; assumes d contains a valid date. */
+C99_LEETCODE_PUBLIC_DECL uint32_t c99lc_date_days_since_1971(const c99lc_reasonable_date* d);
+
+/* Parses "YYYY-MM-DD" into out and validates month and day ranges.
+   Returns C99LC_RESULT_SUCCESS on success, otherwise C99LC_RESULT_FAILED. */
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_reasonable_date_parse_from_string(const char* date_string, c99lc_reasonable_date* out);
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -230,8 +252,7 @@ C99_LEETCODE_PUBLIC_DEF size_t c99lc_integers_count_digits(int x)
     return digit_count;
 }
 
-C99_LEETCODE_PUBLIC_DEF void c99lc_integers_parse_digits_to_array(
-    int source, unsigned char* dest_array, size_t dest_array_size)
+C99_LEETCODE_PUBLIC_DEF void c99lc_integers_parse_digits_to_array(int source, unsigned char* dest_array, size_t dest_array_size)
 {
     if (!dest_array || dest_array_size == 0u) return;
 
@@ -244,8 +265,7 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_integers_parse_digits_to_array(
     }
 }
 
-C99_LEETCODE_PUBLIC_DEF int c99lc_integers_join_digits_from_array(
-    const unsigned char* src_array, size_t src_array_size)
+C99_LEETCODE_PUBLIC_DEF int c99lc_integers_join_digits_from_array(const unsigned char* src_array, size_t src_array_size)
 {
     if (!src_array || src_array_size == 0u) return 0;
 
@@ -287,8 +307,7 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_digits_increment(unsigned char* digits, size_
     }
 }
 
-C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_digits_sum(
-    const unsigned char* digits, size_t digits_size)
+C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_digits_sum(const unsigned char* digits, size_t digits_size)
 {
     if (!digits || digits_size == 0u) return 0u;
 
@@ -339,8 +358,7 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_util_swap_u32(uint32_t* a, uint32_t* b)
 }
 
 /* Parsing */
-C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_integer_parse_uint32_from_string(
-    const char* input, size_t input_size, uint32_t* out)
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_integer_parse_uint32_from_string(const char* input, size_t input_size, uint32_t* out)
 {
     const bool inputs_valid = (input != NULL) && (out != NULL) && (input_size > 0u);
     if (!inputs_valid) return C99LC_RESULT_FAILED;
@@ -473,8 +491,7 @@ C99_LEETCODE_PUBLIC_DEF uint32_t c99lc_date_days_since_1971(const c99lc_reasonab
     return days_total;
 }
 
-C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_reasonable_date_parse_from_string(
-    const char* date_string, c99lc_reasonable_date* out)
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_reasonable_date_parse_from_string(const char* date_string, c99lc_reasonable_date* out)
 {
     if (!date_string || !out) return C99LC_RESULT_FAILED;
 
@@ -487,9 +504,9 @@ C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_reasonable_date_parse_from_string(
     const bool has_separators = (date_string[4] == '-') && (date_string[7] == '-');
     if (!has_separators) return C99LC_RESULT_FAILED;
 
-    if (c99lc_integer_parse_uint32_from_string(date_string,      4, &out->year)  != C99LC_RESULT_SUCCESS) return C99LC_RESULT_FAILED;
+    if (c99lc_integer_parse_uint32_from_string(date_string, 4, &out->year) != C99LC_RESULT_SUCCESS) return C99LC_RESULT_FAILED;
     if (c99lc_integer_parse_uint32_from_string(date_string + 5u, 2, &out->month) != C99LC_RESULT_SUCCESS) return C99LC_RESULT_FAILED;
-    if (c99lc_integer_parse_uint32_from_string(date_string + 8u, 2, &out->day)   != C99LC_RESULT_SUCCESS) return C99LC_RESULT_FAILED;
+    if (c99lc_integer_parse_uint32_from_string(date_string + 8u, 2, &out->day) != C99LC_RESULT_SUCCESS) return C99LC_RESULT_FAILED;
 
     const bool month_valid = (out->month >= 1u) && (out->month <= 12u);
     if (!month_valid) return C99LC_RESULT_FAILED;
