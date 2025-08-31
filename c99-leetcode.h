@@ -121,6 +121,14 @@ C99_LEETCODE_PUBLIC_DECL void c99lc_array_int_reverse_in_place(int* array, size_
    No-op if either pointer is NULL. */
 C99_LEETCODE_PUBLIC_DECL void c99lc_util_swap_u32(uint32_t* a, uint32_t* b);
 
+/* Returns 1 if a[0..n) forms a palindrome when read from index 0 to n-1.
+     Behavior:
+         - Returns 1 for n == 0 or n == 1 (empty and single-element sequences are palindromes).
+         - Returns 0 if a is NULL and n > 0.
+     Intended for digit arrays or general byte sequences. */
+C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_array_u8_is_palindrome(const unsigned char* a,
+    size_t n);
+
 /* Result code */
 typedef int c99lc_result;
 enum { C99LC_RESULT_SUCCESS = 0, C99LC_RESULT_FAILED = 1 };
@@ -357,6 +365,21 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_util_swap_u32(uint32_t* a, uint32_t* b) {
     const uint32_t tmp = *a;
     *a = *b;
     *b = tmp;
+}
+
+C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_array_u8_is_palindrome(const unsigned char* a,
+    size_t n) {
+    if (n <= 1u) return 1u;
+    if (!a) return 0u;
+
+    size_t i = 0u;
+    size_t j = n - 1u;
+    while (i < j) {
+        if (a[i] != a[j]) return 0u;
+        ++i;
+        --j;
+    }
+    return 1u;
 }
 
 /* Parsing */

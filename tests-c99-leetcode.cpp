@@ -35,7 +35,7 @@ TEST_CASE("parse and join digits roundtrip") {
 }
 
 TEST_CASE("digits increment big-endian array") {
-    unsigned char a1[4] = {0,0,9,9};
+    unsigned char a1[4] = {0, 0, 9, 9};
     c99lc_digits_increment(a1, 4);
     CHECK(a1[0] == 0);
     CHECK(a1[1] == 1);
@@ -48,7 +48,7 @@ TEST_CASE("digits increment big-endian array") {
 }
 
 TEST_CASE("digits sum computes total") {
-    const unsigned char a[5] = {1,2,3,0,4};
+    const unsigned char a[5] = {1, 2, 3, 0, 4};
     CHECK(c99lc_digits_sum(a, 5) == 10);
 }
 
@@ -60,7 +60,7 @@ TEST_CASE("bit count and parity") {
 }
 
 TEST_CASE("reverse int array in place") {
-    int a[] = {1,2,3,4};
+    int a[] = {1, 2, 3, 4};
     c99lc_array_int_reverse_in_place(a, 4);
     CHECK(a[0] == 4);
     CHECK(a[1] == 3);
@@ -98,9 +98,9 @@ TEST_CASE("date helpers: leap, dim, parse") {
 }
 
 TEST_CASE("days since 1971 epoch") {
-    c99lc_reasonable_date d1{1971u,1u,1u};
+    c99lc_reasonable_date d1{1971u, 1u, 1u};
     CHECK(c99lc_date_days_since_1971(&d1) == 0u);
-    c99lc_reasonable_date d2{1971u,1u,2u};
+    c99lc_reasonable_date d2{1971u, 1u, 2u};
     CHECK(c99lc_date_days_since_1971(&d2) == 1u);
 }
 
@@ -138,4 +138,43 @@ TEST_CASE("roman to int typical cases") {
     CHECK(c99lc_roman_to_int("CM") == 900);
     CHECK(c99lc_roman_to_int("CD") == 400);
     CHECK(c99lc_roman_to_int("") == 0);
+}
+
+TEST_CASE("u8 array palindrome helper") {
+    CHECK(c99lc_array_u8_is_palindrome(nullptr, 0) == 1);
+
+    const unsigned char p1[1] = {7};
+    CHECK(c99lc_array_u8_is_palindrome(p1, 1) == 1);
+
+    const unsigned char p2[4] = {1, 2, 2, 1};
+    CHECK(c99lc_array_u8_is_palindrome(p2, 4) == 1);
+
+    const unsigned char p3[5] = {3, 4, 5, 4, 3};
+    CHECK(c99lc_array_u8_is_palindrome(p3, 5) == 1);
+
+    const unsigned char np[3] = {1, 2, 3};
+    CHECK(c99lc_array_u8_is_palindrome(np, 3) == 0);
+}
+
+TEST_CASE("palindrome number via digits + palindrome helper") {
+    // Mirror the approach in todo.md but allocation-free and using helpers.
+    // For x < 0, not a palindrome.
+    auto is_pal_num = [](int x) {
+        if (x < 0) return false;
+        size_t n = c99lc_integers_count_digits(x);
+        unsigned char tmp[20] = {0}; // enough for 32-bit signed int (max 10 digits), padded
+        c99lc_integers_parse_digits_to_array(x, tmp, n);
+        // tmp is LSB-first; build big-endian view into buf[0..n)
+        unsigned char buf[20] = {0};
+        for (size_t i = 0; i < n; ++i)
+            buf[i] = tmp[n - 1 - i];
+        return c99lc_array_u8_is_palindrome(buf, n) == 1;
+    };
+
+    CHECK(is_pal_num(0) == true);
+    CHECK(is_pal_num(9) == true);
+    CHECK(is_pal_num(10) == false);
+    CHECK(is_pal_num(121) == true);
+    CHECK(is_pal_num(-121) == false);
+    CHECK(is_pal_num(123454321) == true);
 }
