@@ -63,7 +63,7 @@ IndentWidth: 4
 ContinuationIndentWidth: 4
 KeepLineBreaks: true
 ReflowComments: false
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Attach
 AlwaysBreakAfterReturnType: None
 PenaltyReturnTypeOnItsOwnLine: 1000000
 AllowShortFunctionsOnASingleLine: None

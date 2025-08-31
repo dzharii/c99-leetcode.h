@@ -1,4 +1,8 @@
 ## Agent Instructions
+- Directive 0: You must always read the `c99-leetcode.h` file and adhere to the current code style. 
+  Do not change the existing style. Your coding should follow a self-documenting approach. Code must be clear, variable names should be descriptive, 
+  and the overall style should remain consistent. Before building, run `clang-format` to ensure the code is properly formatted.
+
 - Directive 1: Scope and goal. This repository maintains a single header file `c99-leetcode.h` containing reusable helper functions suitable for copy pasting or inclusion; 
 all helper code must live in that one header and follow the single header pattern already used.
 
