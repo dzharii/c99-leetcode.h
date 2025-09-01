@@ -6,7 +6,6 @@ UseTab: Never
 IndentWidth: 4
 TabWidth: 4
 ContinuationIndentWidth: 4
-KeepLineBreaks: true
 ReflowComments: false
 
 # Braces and short things
@@ -30,7 +29,7 @@ AlignTrailingComments: false
 BinPackArguments: false
 BinPackParameters: false
 AllowAllArgumentsOnNextLine: false
-AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: true
 
 # Pointers, casts, parens
 DerivePointerAlignment: false
@@ -48,49 +47,6 @@ SortUsingDeclarations: false
 IndentExternBlock: NoIndent
 
 # Misc
-Cpp11BracedListStyle: true
-BreakStringLiterals: false
-IndentCaseLabels: true
-IndentGotoLabels: false
-
----
-# Apply the same rules when parsed as C (headers often compile as both)
-Language: C
-BasedOnStyle: LLVM
-ColumnLimit: 100
-UseTab: Never
-IndentWidth: 4
-ContinuationIndentWidth: 4
-KeepLineBreaks: true
-ReflowComments: false
-BreakBeforeBraces: Attach
-AlwaysBreakAfterReturnType: None
-PenaltyReturnTypeOnItsOwnLine: 1000000
-AllowShortFunctionsOnASingleLine: None
-AllowShortBlocksOnASingleLine: Never
-AllowShortIfStatementsOnASingleLine: Never
-AllowShortLoopsOnASingleLine: false
-AlignAfterOpenBracket: DontAlign
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
-AlignConsecutiveMacros: false
-AlignOperands: false
-AlignTrailingComments: false
-
-# Parameters and arguments: force one-per-line once broken
-BinPackArguments: false
-BinPackParameters: false
-AllowAllArgumentsOnNextLine: false
-AllowAllParametersOfDeclarationOnNextLine: false
-
-DerivePointerAlignment: false
-PointerAlignment: Right
-SpaceAfterCStyleCast: true
-SpaceBeforeParens: ControlStatements
-SortIncludes: false
-IncludeBlocks: Preserve
-IndentPPDirectives: None
-IndentExternBlock: NoIndent
 Cpp11BracedListStyle: true
 BreakStringLiterals: false
 IndentCaseLabels: true

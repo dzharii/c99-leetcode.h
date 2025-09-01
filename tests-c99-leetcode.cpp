@@ -178,3 +178,33 @@ TEST_CASE("palindrome number via digits + palindrome helper") {
     CHECK(is_pal_num(-121) == false);
     CHECK(is_pal_num(123454321) == true);
 }
+
+TEST_CASE("interleave halves: shuffle the array examples") {
+    {
+        int nums[] = {2, 5, 1, 3, 4, 7};
+        int out[6] = {0};
+        c99lc_array_int_interleave_halves(out, nums, 3);
+        CHECK(out[0] == 2);
+        CHECK(out[1] == 3);
+        CHECK(out[2] == 5);
+        CHECK(out[3] == 4);
+        CHECK(out[4] == 1);
+        CHECK(out[5] == 7);
+    }
+    {
+        int nums[] = {1, 2, 3, 4, 4, 3, 2, 1};
+        int out[8] = {0};
+        c99lc_array_int_interleave_halves(out, nums, 4);
+        int expected[] = {1, 4, 2, 3, 3, 2, 4, 1};
+        for (int i = 0; i < 8; ++i)
+            CHECK(out[i] == expected[i]);
+    }
+    {
+        int nums[] = {1, 1, 2, 2};
+        int out[4] = {0};
+        c99lc_array_int_interleave_halves(out, nums, 2);
+        int expected[] = {1, 2, 1, 2};
+        for (int i = 0; i < 4; ++i)
+            CHECK(out[i] == expected[i]);
+    }
+}

@@ -79,9 +79,8 @@ C99_LEETCODE_PUBLIC_DECL size_t c99lc_integers_count_digits(int x);
 
 /* Decomposes source into decimal digits written LSB-first into dest_array.
    Writes up to dest_array_size digits; negative numbers produce absolute digits. */
-C99_LEETCODE_PUBLIC_DECL void c99lc_integers_parse_digits_to_array(int source,
-    unsigned char* dest_array,
-    size_t dest_array_size);
+C99_LEETCODE_PUBLIC_DECL void c99lc_integers_parse_digits_to_array(
+    int source, unsigned char* dest_array, size_t dest_array_size);
 
 /* Reconstructs an integer from digits stored LSB-first in src_array.
    Returns 0 if src_array is NULL or src_array_size is 0. */
@@ -129,6 +128,12 @@ C99_LEETCODE_PUBLIC_DECL void c99lc_util_swap_u32(uint32_t* a, uint32_t* b);
 C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_array_u8_is_palindrome(const unsigned char* a,
     size_t n);
 
+/* Interleave halves of an int array.
+    Input:  src holds 2*n ints as [x1, x2, ..., xn, y1, y2, ..., yn].
+    Output: dst becomes [x1, y1, x2, y2, ..., xn, yn].
+    No allocation; no-op if pointers are NULL or n==0. */
+C99_LEETCODE_PUBLIC_DECL void c99lc_array_int_interleave_halves(int* dst, const int* src, size_t n);
+
 /* Result code */
 typedef int c99lc_result;
 enum { C99LC_RESULT_SUCCESS = 0, C99LC_RESULT_FAILED = 1 };
@@ -137,9 +142,8 @@ enum { C99LC_RESULT_SUCCESS = 0, C99LC_RESULT_FAILED = 1 };
 
 /* Parses ASCII decimal digits from input[0..input_size) into *out.
    Fails on non-digits or empty input; returns a C99LC_RESULT_* code. */
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_integer_parse_uint32_from_string(const char* input,
-    size_t input_size,
-    uint32_t* out);
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_integer_parse_uint32_from_string(
+    const char* input, size_t input_size, uint32_t* out);
 
 /* Roman numerals */
 
@@ -194,8 +198,7 @@ C99_LEETCODE_PUBLIC_DECL uint32_t c99lc_date_days_since_1971(const c99lc_reasona
 /* Parses "YYYY-MM-DD" into out and validates month and day ranges.
    Returns C99LC_RESULT_SUCCESS on success, otherwise C99LC_RESULT_FAILED. */
 C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_reasonable_date_parse_from_string(
-    const char* date_string,
-    c99lc_reasonable_date* out);
+    const char* date_string, c99lc_reasonable_date* out);
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -263,9 +266,8 @@ C99_LEETCODE_PUBLIC_DEF size_t c99lc_integers_count_digits(int x) {
     return digit_count;
 }
 
-C99_LEETCODE_PUBLIC_DEF void c99lc_integers_parse_digits_to_array(int source,
-    unsigned char* dest_array,
-    size_t dest_array_size) {
+C99_LEETCODE_PUBLIC_DEF void c99lc_integers_parse_digits_to_array(
+    int source, unsigned char* dest_array, size_t dest_array_size) {
     if (!dest_array || dest_array_size == 0u) return;
 
     for (size_t i = 0; i < dest_array_size; ++i) {
@@ -382,10 +384,23 @@ C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_array_u8_is_palindrome(const unsigne
     return 1u;
 }
 
+/* Interleave */
+C99_LEETCODE_PUBLIC_DEF void c99lc_array_int_interleave_halves(int* dst, const int* src, size_t n) {
+    if (!dst || !src || n == 0u) return;
+
+    const int* xs = src; /* first half */
+    const int* ys = src + n; /* second half */
+    int* out = dst;
+
+    for (size_t i = 0; i < n; ++i) {
+        *out++ = xs[i];
+        *out++ = ys[i];
+    }
+}
+
 /* Parsing */
-C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_integer_parse_uint32_from_string(const char* input,
-    size_t input_size,
-    uint32_t* out) {
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_integer_parse_uint32_from_string(
+    const char* input, size_t input_size, uint32_t* out) {
 
     const bool inputs_valid = (input != NULL) && (out != NULL) && (input_size > 0u);
     if (!inputs_valid) return C99LC_RESULT_FAILED;
@@ -521,8 +536,7 @@ C99_LEETCODE_PUBLIC_DEF uint32_t c99lc_date_days_since_1971(const c99lc_reasonab
 }
 
 C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_reasonable_date_parse_from_string(
-    const char* date_string,
-    c99lc_reasonable_date* out) {
+    const char* date_string, c99lc_reasonable_date* out) {
     if (!date_string || !out) return C99LC_RESULT_FAILED;
 
     size_t len = 0u;
