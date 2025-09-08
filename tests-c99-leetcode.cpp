@@ -59,6 +59,41 @@ TEST_CASE("bit count and parity") {
     CHECK(c99lc_integers_is_even(7) == 0);
 }
 
+TEST_CASE("has zero digit helper") {
+    CHECK(c99lc_integers_has_zero_digit(0) == 1);
+    CHECK(c99lc_integers_has_zero_digit(10) == 1);
+    CHECK(c99lc_integers_has_zero_digit(101) == 1);
+    CHECK(c99lc_integers_has_zero_digit(123) == 0);
+    CHECK(c99lc_integers_has_zero_digit(-5023) == 1);
+    CHECK(c99lc_integers_has_zero_digit(-123) == 0);
+}
+
+TEST_CASE("convert integer to sum of two no-zero integers (LeetCode 1317 helper usage)") {
+    // Use helper to build a pair a,b such that a+b=n and neither contains digit 0.
+    auto find_pair = [](int n, int& out_a, int& out_b) {
+        for (int a = 1; a < n; ++a) {
+            if (c99lc_integers_has_zero_digit(a)) continue;
+            int b = n - a;
+            if (!c99lc_integers_has_zero_digit(b)) {
+                out_a = a;
+                out_b = b;
+                return true;
+            }
+        }
+        return false;
+    };
+    int a = 0, b = 0;
+    CHECK(find_pair(11, a, b) == true);
+    CHECK(a + b == 11);
+    CHECK(c99lc_integers_has_zero_digit(a) == 0);
+    CHECK(c99lc_integers_has_zero_digit(b) == 0);
+
+    CHECK(find_pair(101, a, b) == true); // e.g., 2 + 99 = 101
+    CHECK(a + b == 101);
+    CHECK(c99lc_integers_has_zero_digit(a) == 0);
+    CHECK(c99lc_integers_has_zero_digit(b) == 0);
+}
+
 TEST_CASE("reverse int array in place") {
     int a[] = {1, 2, 3, 4};
     c99lc_array_int_reverse_in_place(a, 4);

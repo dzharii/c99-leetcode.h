@@ -95,6 +95,14 @@ C99_LEETCODE_PUBLIC_DECL int c99lc_integers_count_set_bits(int number);
    Handles negative and positive values consistently. */
 C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_integers_is_even(int num);
 
+/* Returns 1 if the base-10 representation of num contains at least one '0' digit, else 0.
+   Behavior:
+       - 0 returns 1 (its only digit is zero).
+       - Negative values are examined by their absolute value.
+   Examples: 101 -> 1, 123 -> 0, 909 -> 1.
+   Complexity: O(d) where d is the number of decimal digits. */
+C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_integers_has_zero_digit(int num);
+
 /* Increments a big-endian decimal digit array in place by 1.
    Digits must be in [0,9]; carry ripples from the least significant end. */
 C99_LEETCODE_PUBLIC_DECL void c99lc_digits_increment(unsigned char* digits, size_t digits_size);
@@ -304,6 +312,17 @@ C99_LEETCODE_PUBLIC_DEF int c99lc_integers_count_set_bits(int number) {
 C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_integers_is_even(int num) {
     const bool is_even = ((num % 2) == 0);
     return (unsigned char)(is_even ? 1u : 0u);
+}
+
+C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_integers_has_zero_digit(int num) {
+    if (num == 0) return 1u; /* defined: 0 has a zero digit */
+    if (num < 0) num = -num;
+    while (num > 0) {
+        const int digit = num % 10;
+        if (digit == 0) return 1u;
+        num /= 10;
+    }
+    return 0u;
 }
 
 C99_LEETCODE_PUBLIC_DEF void c99lc_digits_increment(unsigned char* digits, size_t digits_size) {
