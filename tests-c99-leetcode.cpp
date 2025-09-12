@@ -243,3 +243,93 @@ TEST_CASE("interleave halves: shuffle the array examples") {
             CHECK(out[i] == expected[i]);
     }
 }
+
+TEST_CASE("add two LSB-first digit arrays typical sums") {
+    unsigned char a[3] = {5, 4, 3}; // 345
+    unsigned char b[2] = {5, 5}; // 55
+    unsigned char out[5] = {0};
+    size_t out_size = 0;
+    CHECK(c99lc_digits_add_lsb_first(a, 3, b, 2, out, 5, &out_size) == C99LC_RESULT_SUCCESS);
+    // 345 + 55 = 400 => digits LSB-first: 0,0,4
+    CHECK(out_size == 3);
+    CHECK(out[0] == 0);
+    CHECK(out[1] == 0);
+    CHECK(out[2] == 4);
+}
+
+TEST_CASE("add two LSB-first digit arrays with carry producing extra digit") {
+    unsigned char a[3] = {9, 9, 9}; // 999
+    unsigned char b[1] = {1}; // 1
+    unsigned char out[5] = {0};
+    size_t out_size = 0;
+    CHECK(c99lc_digits_add_lsb_first(a, 3, b, 1, out, 5, &out_size) == C99LC_RESULT_SUCCESS);
+    // 999 + 1 = 1000 => digits LSB-first: 0,0,0,1
+    CHECK(out_size == 4);
+    CHECK(out[0] == 0);
+    CHECK(out[1] == 0);
+    CHECK(out[2] == 0);
+    CHECK(out[3] == 1);
+}
+
+TEST_CASE("add two LSB-first digit arrays insufficient capacity fails") {
+    unsigned char a[2] = {9, 9}; // 99
+    unsigned char b[1] = {1}; // 1
+    unsigned char out[2] = {0};
+    size_t out_size = 1234; // sentinel to verify unchanged on failure
+    CHECK(c99lc_digits_add_lsb_first(a, 2, b, 1, out, 2, &out_size) == C99LC_RESULT_FAILED);
+    CHECK(out_size == 1234);
+}
+
+TEST_CASE("digits_positive_int_buffer addToArrayForm style sequence") {
+    unsigned char n_storage[16] = {0};
+    unsigned char k_storage[16] = {0};
+    unsigned char sum_storage[16] = {0};
+    c99lc_digits_positive_int_buffer nbuf, kbuf, sum;
+    REQUIRE(c99lc_digits_positive_int_init(&nbuf, n_storage, 16) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_init(&kbuf, k_storage, 16) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_init(&sum, sum_storage, 16) == C99LC_RESULT_SUCCESS);
+    int num_arr[] = {1, 2, 0, 0};
+    REQUIRE(
+        c99lc_digits_positive_int_from_big_endian_array(&nbuf, num_arr, 4) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_from_int(&kbuf, 34) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_add(&nbuf, &kbuf, &sum) == C99LC_RESULT_SUCCESS);
+    int out_arr[16] = {0};
+    size_t out_n = 0;
+    REQUIRE(c99lc_digits_positive_int_to_big_endian_int_array(&sum, out_arr, 16, &out_n) ==
+        C99LC_RESULT_SUCCESS);
+    CHECK(out_n == 4);
+    int expected[] = {1, 2, 3, 4};
+    for (size_t i = 0; i < out_n; ++i)
+        CHECK(out_arr[i] == expected[i]);
+}
+
+TEST_CASE("digits_positive_int_buffer addition carry chain") {
+    unsigned char a_store[8] = {0}, b_store[8] = {0}, o_store[8] = {0};
+    c99lc_digits_positive_int_buffer a, b, o;
+    REQUIRE(c99lc_digits_positive_int_init(&a, a_store, 8) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_init(&b, b_store, 8) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_init(&o, o_store, 8) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_from_int(&a, 999) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_from_int(&b, 1) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_add(&a, &b, &o) == C99LC_RESULT_SUCCESS);
+    int out_arr[8] = {0};
+    size_t out_n = 0;
+    REQUIRE(c99lc_digits_positive_int_to_big_endian_int_array(&o, out_arr, 8, &out_n) ==
+        C99LC_RESULT_SUCCESS);
+    CHECK(out_n == 4);
+    int expected[] = {1, 0, 0, 0};
+    for (size_t i = 0; i < out_n; ++i)
+        CHECK(out_arr[i] == expected[i]);
+}
+
+TEST_CASE("digits_positive_int_buffer insufficient capacity add fails") {
+    unsigned char a_store[2] = {0}, b_store[2] = {0}, o_store[2] = {0};
+    c99lc_digits_positive_int_buffer a, b, o;
+    REQUIRE(c99lc_digits_positive_int_init(&a, a_store, 2) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_init(&b, b_store, 2) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_init(&o, o_store, 2) == C99LC_RESULT_SUCCESS);
+    REQUIRE(c99lc_digits_positive_int_from_int(&a, 90) == C99LC_RESULT_SUCCESS); // digits 0,9
+    REQUIRE(c99lc_digits_positive_int_from_int(&b, 15) == C99LC_RESULT_SUCCESS); // digits 5,1
+    // Need capacity 3 for result (105) but out only has 2
+    CHECK(c99lc_digits_positive_int_add(&a, &b, &o) == C99LC_RESULT_FAILED);
+}

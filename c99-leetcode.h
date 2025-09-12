@@ -46,6 +46,10 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+/* Result code (moved early so later declarations can use it) */
+typedef int c99lc_result;
+enum { C99LC_RESULT_SUCCESS = 0, C99LC_RESULT_FAILED = 1 };
+
 /* Optional configuration hooks for future allocation needs. */
 #ifndef C99_LEETCODE_NO_ALLOC
 #include <stddef.h>
@@ -112,6 +116,49 @@ C99_LEETCODE_PUBLIC_DECL void c99lc_digits_increment(unsigned char* digits, size
 C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_digits_sum(const unsigned char* digits,
     size_t digits_size);
 
+/* Fixed-capacity positive decimal digit buffer.
+   Represents a non-negative integer in base-10 with digits stored least-significant first.
+   Intended for problems like LeetCode 989 (Add to Array-Form of Integer) to avoid dynamic
+   allocation in intermediate steps.
+   Invariants:
+     - size in [1, capacity] when representing a value.
+     - digits[i] in [0,9].
+*/
+typedef struct c99lc_digits_positive_int_buffer {
+    size_t size; /* number of used digits */
+    size_t capacity; /* total available slots in digits[] */
+    unsigned char* digits; /* LSB-first digit storage */
+} c99lc_digits_positive_int_buffer;
+
+/* Initializes buf with external storage digits[0..capacity).
+   After init the represented value is 0 (size==1, digits[0]==0).
+   Returns C99LC_RESULT_FAILED if arguments invalid (buf==NULL, digits==NULL, capacity==0). */
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_positive_int_init(
+    c99lc_digits_positive_int_buffer* buf, unsigned char* digits_mem, size_t capacity);
+
+/* Parses non-negative integer k into buf (overwriting previous contents).
+   Requires k>=0 and buf previously initialized. Returns C99LC_RESULT_FAILED on NULL buf or
+   if capacity insufficient (when k has more digits than capacity). */
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_positive_int_from_int(
+    c99lc_digits_positive_int_buffer* buf, int k);
+
+/* Loads digits from a big-endian array src[0..n) (as typically provided by LeetCode where
+   the first element is the most significant digit). Fails if n==0, buf NULL, or n>capacity. */
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_positive_int_from_big_endian_array(
+    c99lc_digits_positive_int_buffer* buf, const int* src, size_t n);
+
+/* Adds two buffers a and b storing LSB-first digits and writes result into out.
+   Fails if out capacity < max(a.size,b.size)+1 or any pointer NULL. Out may alias neither a nor b. */
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_positive_int_add(
+    const c99lc_digits_positive_int_buffer* a,
+    const c99lc_digits_positive_int_buffer* b,
+    c99lc_digits_positive_int_buffer* out);
+
+/* Writes big-endian int array of the number in buf into dst[0..dst_cap). On success sets *out_size.
+   Fails if dst_cap < buf->size. dst and buf must be non-null. */
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_positive_int_to_big_endian_int_array(
+    const c99lc_digits_positive_int_buffer* buf, int* dst, size_t dst_cap, size_t* out_size);
+
 #ifndef C99_LEETCODE_NO_STDIO
 /* Prints digits as "[d0, d1, ...]\n" to stdout.
    Safe to call with NULL pointer (prints an empty list). */
@@ -142,9 +189,29 @@ C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_array_u8_is_palindrome(const unsign
     No allocation; no-op if pointers are NULL or n==0. */
 C99_LEETCODE_PUBLIC_DECL void c99lc_array_int_interleave_halves(int* dst, const int* src, size_t n);
 
-/* Result code */
-typedef int c99lc_result;
-enum { C99LC_RESULT_SUCCESS = 0, C99LC_RESULT_FAILED = 1 };
+/* Adds two non-negative integers represented as base-10 digit arrays stored LSB-first.
+     Inputs:
+         a[0..a_size) and b[0..b_size) hold digits with a[0] the least significant digit.
+     Output:
+         Writes the sum into out[0..*out_size) also LSB-first.
+         On success returns C99LC_RESULT_SUCCESS and sets *out_size to the number of digits
+         written (never exceeding out_cap).
+     Failure cases:
+         - Any required pointer is NULL (a/b/out/out_size) while its size is > 0.
+         - out_cap is insufficient for max(a_size, b_size) + 1 potential carry digit.
+       In these cases returns C99LC_RESULT_FAILED and leaves *out_size unmodified.
+     Notes:
+         - Digits must each be in the range [0,9]; behavior is undefined otherwise.
+         - Accepts zero-length operands (treated as value 0).
+         - This helper is allocation-free and intended for small / medium sized numbers
+           typical in coding challenge contexts. */
+C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_add_lsb_first(const unsigned char* a,
+    size_t a_size,
+    const unsigned char* b,
+    size_t b_size,
+    unsigned char* out,
+    size_t out_cap,
+    size_t* out_size);
 
 /* Parsing helpers */
 
@@ -345,6 +412,122 @@ C99_LEETCODE_PUBLIC_DEF unsigned char c99lc_digits_sum(const unsigned char* digi
     for (size_t i = 0; i < digits_size; ++i)
         total += digits[i];
     return (unsigned char)total;
+}
+
+/* ---- c99lc_digits_pos_buffer implementation -------------------------------- */
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_digits_positive_int_init(
+    c99lc_digits_positive_int_buffer* buf, unsigned char* digits_mem, size_t capacity) {
+    if (!buf || !digits_mem || capacity == 0u) return C99LC_RESULT_FAILED;
+    buf->size = 1u;
+    buf->capacity = capacity;
+    buf->digits = digits_mem;
+    buf->digits[0] = 0u;
+    return C99LC_RESULT_SUCCESS;
+}
+
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_digits_positive_int_from_int(
+    c99lc_digits_positive_int_buffer* buf, int k) {
+    if (!buf || !buf->digits || buf->capacity == 0u || k < 0) return C99LC_RESULT_FAILED;
+    if (k == 0) {
+        buf->size = 1u;
+        buf->digits[0] = 0u;
+        return C99LC_RESULT_SUCCESS;
+    }
+    size_t needed = 0u;
+    int tmp = k;
+    while (tmp > 0) {
+        ++needed;
+        tmp /= 10;
+    }
+    if (needed > buf->capacity) return C99LC_RESULT_FAILED;
+    buf->size = 0u;
+    while (k > 0) {
+        buf->digits[buf->size++] = (unsigned char)(k % 10);
+        k /= 10;
+    }
+    return C99LC_RESULT_SUCCESS;
+}
+
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_digits_positive_int_from_big_endian_array(
+    c99lc_digits_positive_int_buffer* buf, const int* src, size_t n) {
+    if (!buf || !buf->digits || !src || n == 0u || n > buf->capacity) return C99LC_RESULT_FAILED;
+    /* src[0] is most significant; we store LSB-first */
+    buf->size = 0u;
+    for (size_t i = 0; i < n; ++i) {
+        const int value = src[n - 1u - i];
+        if (value < 0 || value > 9) return C99LC_RESULT_FAILED;
+        buf->digits[buf->size++] = (unsigned char)value;
+    }
+    if (buf->size == 0u) { /* ensure at least one digit */
+        buf->digits[0] = 0u;
+        buf->size = 1u;
+    }
+    return C99LC_RESULT_SUCCESS;
+}
+
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_digits_positive_int_add(
+    const c99lc_digits_positive_int_buffer* a,
+    const c99lc_digits_positive_int_buffer* b,
+    c99lc_digits_positive_int_buffer* out) {
+    if (!a || !b || !out) return C99LC_RESULT_FAILED;
+    if (!a->digits || !b->digits || !out->digits) return C99LC_RESULT_FAILED;
+    const size_t max_input = (a->size > b->size) ? a->size : b->size;
+    const size_t required = max_input + 1u;
+    if (out->capacity < required) return C99LC_RESULT_FAILED;
+    size_t w = 0u;
+    int carry = 0;
+    for (size_t i = 0; i < max_input; ++i) {
+        const int da = (i < a->size) ? (int)a->digits[i] : 0;
+        const int db = (i < b->size) ? (int)b->digits[i] : 0;
+        int s = da + db + carry;
+        out->digits[w++] = (unsigned char)(s % 10);
+        carry = s / 10;
+    }
+    if (carry) out->digits[w++] = (unsigned char)carry;
+    out->size = w;
+    return C99LC_RESULT_SUCCESS;
+}
+
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_digits_positive_int_to_big_endian_int_array(
+    const c99lc_digits_positive_int_buffer* buf, int* dst, size_t dst_cap, size_t* out_size) {
+    if (!buf || !dst || !out_size || !buf->digits) return C99LC_RESULT_FAILED;
+    if (buf->size > dst_cap) return C99LC_RESULT_FAILED;
+    for (size_t i = 0; i < buf->size; ++i) {
+        dst[i] = (int)buf->digits[buf->size - 1u - i];
+    }
+    *out_size = buf->size;
+    return C99LC_RESULT_SUCCESS;
+}
+
+C99_LEETCODE_PUBLIC_DEF c99lc_result c99lc_digits_add_lsb_first(const unsigned char* a,
+    size_t a_size,
+    const unsigned char* b,
+    size_t b_size,
+    unsigned char* out,
+    size_t out_cap,
+    size_t* out_size) {
+    const bool pointers_ok = ((a_size == 0u) || a) && ((b_size == 0u) || b) && out && out_size;
+    if (!pointers_ok) return C99LC_RESULT_FAILED;
+
+    const size_t max_input = (a_size > b_size) ? a_size : b_size;
+    const size_t required_cap = max_input + 1u; /* +1 for potential final carry */
+    if (out_cap < required_cap) {
+        /* Even if carry not produced we conservatively require cap for clarity */
+        return C99LC_RESULT_FAILED;
+    }
+
+    size_t write_index = 0u;
+    int carry = 0;
+    for (size_t i = 0; i < max_input; ++i) {
+        const int da = (i < a_size) ? (int)a[i] : 0;
+        const int db = (i < b_size) ? (int)b[i] : 0;
+        int s = da + db + carry;
+        out[write_index++] = (unsigned char)(s % 10);
+        carry = s / 10;
+    }
+    if (carry) out[write_index++] = (unsigned char)carry;
+    *out_size = write_index;
+    return C99LC_RESULT_SUCCESS;
 }
 
 #ifndef C99_LEETCODE_NO_STDIO
