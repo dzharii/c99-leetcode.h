@@ -1,1 +1,1 @@
-// (empty) – no pending tasks (integrated digit buffer helpers into c99-leetcode.h)
+// (empty) – work completed: string utilities integrated into c99-leetcode.h

@@ -333,3 +333,70 @@ TEST_CASE("digits_positive_int_buffer insufficient capacity add fails") {
     // Need capacity 3 for result (105) but out only has 2
     CHECK(c99lc_digits_positive_int_add(&a, &b, &o) == C99LC_RESULT_FAILED);
 }
+
+TEST_CASE("c99lc_string_to_camel_case basic functionality") {
+    char buffer[50];
+
+    // Basic camelCase conversion
+    size_t result = c99lc_string_to_camel_case("hello world", buffer, 50);
+    CHECK(result == 10);
+    buffer[result] = '\0'; // null terminate for comparison
+    CHECK(std::strcmp(buffer, "helloWorld") == 0);
+
+    // Multiple spaces
+    result = c99lc_string_to_camel_case("the quick brown fox", buffer, 50);
+    CHECK(result == 16);
+    buffer[result] = '\0';
+    CHECK(std::strcmp(buffer, "theQuickBrownFox") == 0);
+
+    // Mixed case input
+    result = c99lc_string_to_camel_case("MiXeD cAsE", buffer, 50);
+    CHECK(result == 9);
+    buffer[result] = '\0';
+    CHECK(std::strcmp(buffer, "mixedCase") == 0);
+}
+
+TEST_CASE("c99lc_string_to_camel_case edge cases") {
+    char buffer[50];
+
+    // Empty string
+    size_t result = c99lc_string_to_camel_case("", buffer, 50);
+    CHECK(result == 0);
+
+    // Only spaces
+    result = c99lc_string_to_camel_case("   ", buffer, 50);
+    CHECK(result == 0);
+
+    // Single character
+    result = c99lc_string_to_camel_case("a", buffer, 50);
+    CHECK(result == 1);
+    buffer[result] = '\0';
+    CHECK(std::strcmp(buffer, "a") == 0);
+
+    // Buffer too small
+    result = c99lc_string_to_camel_case("hello world", buffer, 5);
+    CHECK(result == 5);
+    buffer[result] = '\0';
+    CHECK(std::strcmp(buffer, "hello") == 0);
+
+    // NULL inputs
+    CHECK(c99lc_string_to_camel_case(nullptr, buffer, 50) == 0);
+    CHECK(c99lc_string_to_camel_case("test", nullptr, 50) == 0);
+    CHECK(c99lc_string_to_camel_case("test", buffer, 0) == 0);
+}
+
+TEST_CASE("c99lc_string_to_camel_case special characters") {
+    char buffer[50];
+
+    // Numbers and symbols (should be skipped)
+    size_t result = c99lc_string_to_camel_case("hello123 world!", buffer, 50);
+    CHECK(result == 10);
+    buffer[result] = '\0';
+    CHECK(std::strcmp(buffer, "helloWorld") == 0);
+
+    // Leading/trailing spaces
+    result = c99lc_string_to_camel_case("  hello world  ", buffer, 50);
+    CHECK(result == 10);
+    buffer[result] = '\0';
+    CHECK(std::strcmp(buffer, "helloWorld") == 0);
+}

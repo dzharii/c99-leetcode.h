@@ -213,6 +213,21 @@ C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_add_lsb_first(const unsigned 
     size_t out_cap,
     size_t* out_size);
 
+/* String utilities */
+
+/* Converts source string to camelCase by capitalizing letters after spaces and lowercasing others.
+   Writes result into buffer[0..buffer_capacity), returns number of characters written.
+   Only alphabetic characters are copied; spaces and other characters are skipped.
+   First character is always lowercase if it's alphabetic.
+   Parameters:
+     - source: null-terminated input string
+     - buffer: destination buffer for camelCase result
+     - buffer_capacity: maximum characters to write (excluding null terminator)
+   Returns: number of characters written, or 0 if source/buffer is NULL or buffer_capacity is 0.
+   Complexity: O(n) where n is strlen(source). */
+C99_LEETCODE_PUBLIC_DECL size_t c99lc_string_to_camel_case(
+    const char* source, char* buffer, size_t buffer_capacity);
+
 /* Parsing helpers */
 
 /* Parses ASCII decimal digits from input[0..input_size) into *out.
@@ -327,6 +342,7 @@ C99_LEETCODE_PUBLIC_DEF const char* c99lc_version(void) {
 
 /* ---- Integer utilities implementation ----------------------------------- */
 #include <stddef.h> /* size_t */
+#include <ctype.h> /* isalpha, toupper, tolower */
 
 C99_LEETCODE_PUBLIC_DEF size_t c99lc_integers_count_digits(int x) {
     if (x == 0) return 1u;
@@ -547,6 +563,39 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_print_integer_array(const unsigned char* a, s
     fputs("]\n", stdout);
 }
 #endif
+
+/* ---- String utilities implementation ------------------------------------ */
+
+C99_LEETCODE_PUBLIC_DEF size_t c99lc_string_to_camel_case(
+    const char* source, char* buffer, size_t buffer_capacity) {
+    if (!source || !buffer || buffer_capacity == 0u) return 0u;
+
+    size_t buffer_size = 0u;
+    const char* p = source;
+    const char* prev_p = p;
+    bool first_char = true;
+
+    while (*p && buffer_size < buffer_capacity) {
+        if (isalpha((unsigned char)*p)) {
+            char ch = *p;
+
+            bool should_capitalize = (*prev_p == ' ') && !first_char;
+
+            if (should_capitalize) {
+                ch = (char)toupper((unsigned char)ch);
+            } else {
+                ch = (char)tolower((unsigned char)ch);
+            }
+            buffer[buffer_size++] = ch;
+
+            first_char = false;
+        }
+
+        prev_p = p;
+        p++;
+    }
+    return buffer_size;
+}
 
 /* Arrays and utilities */
 C99_LEETCODE_PUBLIC_DEF void c99lc_array_int_reverse_in_place(int* array, size_t array_size) {
