@@ -400,3 +400,142 @@ TEST_CASE("c99lc_string_to_camel_case special characters") {
     buffer[result] = '\0';
     CHECK(std::strcmp(buffer, "helloWorld") == 0);
 }
+
+TEST_CASE("c99lc_stack_char_fla basic operations") {
+    c99lc_stack_char_fla* stack = c99lc_stack_char_fla_create(5);
+    REQUIRE(stack != nullptr);
+
+    // Initial state
+    CHECK(c99lc_stack_char_fla_count(stack) == 0);
+
+    // Push characters
+    CHECK(c99lc_stack_char_fla_push(stack, 'a') == true);
+    CHECK(c99lc_stack_char_fla_push(stack, 'b') == true);
+    CHECK(c99lc_stack_char_fla_push(stack, 'c') == true);
+    CHECK(c99lc_stack_char_fla_count(stack) == 3);
+
+    // Pop characters (LIFO order)
+    char ch;
+    CHECK(c99lc_stack_char_fla_pop(stack, &ch) == true);
+    CHECK(ch == 'c');
+    CHECK(c99lc_stack_char_fla_pop(stack, &ch) == true);
+    CHECK(ch == 'b');
+    CHECK(c99lc_stack_char_fla_count(stack) == 1);
+
+    CHECK(c99lc_stack_char_fla_pop(stack, &ch) == true);
+    CHECK(ch == 'a');
+    CHECK(c99lc_stack_char_fla_count(stack) == 0);
+
+    // Pop from empty stack
+    CHECK(c99lc_stack_char_fla_pop(stack, &ch) == false);
+
+    c99lc_stack_char_fla_destroy(stack);
+}
+
+TEST_CASE("c99lc_stack_char_fla capacity limits") {
+    c99lc_stack_char_fla* stack = c99lc_stack_char_fla_create(2);
+    REQUIRE(stack != nullptr);
+
+    // Fill to capacity
+    CHECK(c99lc_stack_char_fla_push(stack, 'x') == true);
+    CHECK(c99lc_stack_char_fla_push(stack, 'y') == true);
+
+    // Try to exceed capacity
+    CHECK(c99lc_stack_char_fla_push(stack, 'z') == false);
+    CHECK(c99lc_stack_char_fla_count(stack) == 2);
+
+    c99lc_stack_char_fla_destroy(stack);
+}
+
+TEST_CASE("c99lc_stack_char_fla edge cases") {
+    // Create with zero capacity
+    CHECK(c99lc_stack_char_fla_create(0) == nullptr);
+
+    // Operations on NULL stack
+    CHECK(c99lc_stack_char_fla_count(nullptr) == 0);
+    CHECK(c99lc_stack_char_fla_push(nullptr, 'a') == false);
+
+    char ch;
+    CHECK(c99lc_stack_char_fla_pop(nullptr, &ch) == false);
+
+    // Pop with NULL output
+    c99lc_stack_char_fla* stack = c99lc_stack_char_fla_create(1);
+    c99lc_stack_char_fla_push(stack, 'a');
+    CHECK(c99lc_stack_char_fla_pop(stack, nullptr) == false);
+
+    // Destroy NULL stack (should not crash)
+    c99lc_stack_char_fla_destroy(nullptr);
+    c99lc_stack_char_fla_destroy(stack);
+}
+
+TEST_CASE("c99lc_char_is_open_paren identifies opening parentheses") {
+    CHECK(c99lc_char_is_open_paren('(') == true);
+    CHECK(c99lc_char_is_open_paren('{') == true);
+    CHECK(c99lc_char_is_open_paren('[') == true);
+
+    CHECK(c99lc_char_is_open_paren(')') == false);
+    CHECK(c99lc_char_is_open_paren('}') == false);
+    CHECK(c99lc_char_is_open_paren(']') == false);
+    CHECK(c99lc_char_is_open_paren('a') == false);
+    CHECK(c99lc_char_is_open_paren('1') == false);
+    CHECK(c99lc_char_is_open_paren('\0') == false);
+}
+
+TEST_CASE("c99lc_char_is_close_paren identifies closing parentheses") {
+    CHECK(c99lc_char_is_close_paren(')') == true);
+    CHECK(c99lc_char_is_close_paren('}') == true);
+    CHECK(c99lc_char_is_close_paren(']') == true);
+
+    CHECK(c99lc_char_is_close_paren('(') == false);
+    CHECK(c99lc_char_is_close_paren('{') == false);
+    CHECK(c99lc_char_is_close_paren('[') == false);
+    CHECK(c99lc_char_is_close_paren('a') == false);
+    CHECK(c99lc_char_is_close_paren('1') == false);
+    CHECK(c99lc_char_is_close_paren('\0') == false);
+}
+
+TEST_CASE("c99lc_char_paren_reverse maps parentheses correctly") {
+    // Opening to closing
+    CHECK(c99lc_char_paren_reverse('(') == ')');
+    CHECK(c99lc_char_paren_reverse('{') == '}');
+    CHECK(c99lc_char_paren_reverse('[') == ']');
+
+    // Closing to opening
+    CHECK(c99lc_char_paren_reverse(')') == '(');
+    CHECK(c99lc_char_paren_reverse('}') == '{');
+    CHECK(c99lc_char_paren_reverse(']') == '[');
+
+    // Non-parentheses
+    CHECK(c99lc_char_paren_reverse('a') == '\0');
+    CHECK(c99lc_char_paren_reverse('1') == '\0');
+    CHECK(c99lc_char_paren_reverse('\0') == '\0');
+    CHECK(c99lc_char_paren_reverse(' ') == '\0');
+}
+
+TEST_CASE("parentheses validation using new functions") {
+    // Test a simple valid parentheses string using the new stack and helpers
+    c99lc_stack_char_fla* stack = c99lc_stack_char_fla_create(100);
+    REQUIRE(stack != nullptr);
+
+    const char* test_str = "()[]{}";
+    bool is_valid = true;
+    char popped_char;
+
+    for (const char* p = test_str; *p && is_valid; p++) {
+        if (c99lc_char_is_open_paren(*p)) {
+            c99lc_stack_char_fla_push(stack, *p);
+        } else if (c99lc_char_is_close_paren(*p)) {
+            if (!c99lc_stack_char_fla_pop(stack, &popped_char)) {
+                is_valid = false;
+            } else if (popped_char != c99lc_char_paren_reverse(*p)) {
+                is_valid = false;
+            }
+        }
+    }
+
+    // Stack should be empty for valid parentheses
+    is_valid = is_valid && (c99lc_stack_char_fla_count(stack) == 0);
+    CHECK(is_valid == true);
+
+    c99lc_stack_char_fla_destroy(stack);
+}

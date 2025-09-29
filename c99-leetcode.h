@@ -213,6 +213,36 @@ C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_add_lsb_first(const unsigned 
     size_t out_cap,
     size_t* out_size);
 
+/* Stack utilities */
+
+/* Fixed-capacity character stack using flexible array member.
+   Provides a simple LIFO container for character data with allocation at creation time. */
+typedef struct c99lc_stack_char_fla {
+    size_t capacity; /* maximum number of characters the stack can hold */
+    size_t count; /* current number of characters in the stack */
+    char items[]; /* flexible array member for character storage */
+} c99lc_stack_char_fla;
+
+/* Creates a character stack with specified capacity.
+   Returns NULL on allocation failure or if capacity is 0. */
+C99_LEETCODE_PUBLIC_DECL c99lc_stack_char_fla* c99lc_stack_char_fla_create(size_t capacity);
+
+/* Destroys a character stack and frees its memory.
+   Safe to call with NULL pointer. */
+C99_LEETCODE_PUBLIC_DECL void c99lc_stack_char_fla_destroy(c99lc_stack_char_fla* stack);
+
+/* Returns the current number of characters in the stack.
+   Returns 0 if stack is NULL. */
+C99_LEETCODE_PUBLIC_DECL size_t c99lc_stack_char_fla_count(const c99lc_stack_char_fla* stack);
+
+/* Pushes a character onto the stack.
+   Returns true on success, false if stack is NULL or at capacity. */
+C99_LEETCODE_PUBLIC_DECL bool c99lc_stack_char_fla_push(c99lc_stack_char_fla* stack, char c);
+
+/* Pops a character from the stack and stores it in *out.
+   Returns true on success, false if stack is NULL, empty, or out is NULL. */
+C99_LEETCODE_PUBLIC_DECL bool c99lc_stack_char_fla_pop(c99lc_stack_char_fla* stack, char* out);
+
 /* String utilities */
 
 /* Converts source string to camelCase by capitalizing letters after spaces and lowercasing others.
@@ -227,6 +257,21 @@ C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_add_lsb_first(const unsigned 
    Complexity: O(n) where n is strlen(source). */
 C99_LEETCODE_PUBLIC_DECL size_t c99lc_string_to_camel_case(
     const char* source, char* buffer, size_t buffer_capacity);
+
+/* Character classification helpers */
+
+/* Returns true if the character is an opening parenthesis: '(', '{', or '['.
+   Returns false for any other character. */
+C99_LEETCODE_PUBLIC_DECL bool c99lc_char_is_open_paren(char ch);
+
+/* Returns true if the character is a closing parenthesis: ')', '}', or ']'.
+   Returns false for any other character. */
+C99_LEETCODE_PUBLIC_DECL bool c99lc_char_is_close_paren(char ch);
+
+/* Returns the matching parenthesis for the given character.
+   Maps '(' to ')', '{' to '}', '[' to ']' and vice versa.
+   Returns '\0' if the character is not a recognized parenthesis. */
+C99_LEETCODE_PUBLIC_DECL char c99lc_char_paren_reverse(char ch);
 
 /* Parsing helpers */
 
@@ -595,6 +640,67 @@ C99_LEETCODE_PUBLIC_DEF size_t c99lc_string_to_camel_case(
         p++;
     }
     return buffer_size;
+}
+
+/* ---- Stack utilities implementation ------------------------------------ */
+
+C99_LEETCODE_PUBLIC_DEF c99lc_stack_char_fla* c99lc_stack_char_fla_create(size_t capacity) {
+    if (capacity == 0) return NULL;
+
+    c99lc_stack_char_fla* stack = (c99lc_stack_char_fla*)C99_LEETCODE_MALLOC(NULL,
+        sizeof(c99lc_stack_char_fla) + capacity * sizeof(char));
+
+    if (stack) {
+        stack->capacity = capacity;
+        stack->count = 0;
+    }
+    return stack;
+}
+
+C99_LEETCODE_PUBLIC_DEF void c99lc_stack_char_fla_destroy(c99lc_stack_char_fla* stack) {
+    if (stack) { C99_LEETCODE_FREE(NULL, stack); }
+}
+
+C99_LEETCODE_PUBLIC_DEF size_t c99lc_stack_char_fla_count(const c99lc_stack_char_fla* stack) {
+    return stack ? stack->count : 0;
+}
+
+C99_LEETCODE_PUBLIC_DEF bool c99lc_stack_char_fla_push(c99lc_stack_char_fla* stack, char c) {
+    if (!stack || stack->count >= stack->capacity) return false;
+    stack->items[stack->count++] = c;
+    return true;
+}
+
+C99_LEETCODE_PUBLIC_DEF bool c99lc_stack_char_fla_pop(c99lc_stack_char_fla* stack, char* out) {
+    if (!stack || stack->count == 0 || !out) return false;
+    stack->count--;
+    *out = stack->items[stack->count];
+    return true;
+}
+
+/* ---- Character classification helpers implementation ------------------- */
+
+C99_LEETCODE_PUBLIC_DEF bool c99lc_char_is_open_paren(char ch) {
+    return ch == '(' || ch == '{' || ch == '[';
+}
+
+C99_LEETCODE_PUBLIC_DEF bool c99lc_char_is_close_paren(char ch) {
+    return ch == ')' || ch == '}' || ch == ']';
+}
+
+C99_LEETCODE_PUBLIC_DEF char c99lc_char_paren_reverse(char ch) {
+    static const char c99lc__paren_pairs[][2] = {
+        {'(', ')'},
+        {'{', '}'},
+        {'[', ']'},
+    };
+
+    const size_t lookup_count = sizeof(c99lc__paren_pairs) / sizeof(c99lc__paren_pairs[0]);
+    for (size_t i = 0; i < lookup_count; i++) {
+        if (c99lc__paren_pairs[i][0] == ch) { return c99lc__paren_pairs[i][1]; }
+        if (c99lc__paren_pairs[i][1] == ch) { return c99lc__paren_pairs[i][0]; }
+    }
+    return '\0'; /* not recognized */
 }
 
 /* Arrays and utilities */
