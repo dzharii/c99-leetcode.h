@@ -539,3 +539,151 @@ TEST_CASE("parentheses validation using new functions") {
 
     c99lc_stack_char_fla_destroy(stack);
 }
+
+TEST_CASE("c99lc_bitset_create allocates and initializes correctly") {
+    c99lc_bitset* bitset = c99lc_bitset_create(16);
+    REQUIRE(bitset != nullptr);
+    CHECK(bitset->bits_capacity == 16);
+    CHECK(bitset->bytes_capacity == 2);
+
+    // All bits should be initialized to 0
+    for (size_t i = 0; i < 16; ++i) {
+        CHECK(c99lc_bitset_test(bitset, i) == false);
+    }
+
+    c99lc_bitset_destroy(bitset);
+}
+
+TEST_CASE("c99lc_bitset_create with zero capacity returns NULL") {
+    c99lc_bitset* bitset = c99lc_bitset_create(0);
+    CHECK(bitset == nullptr);
+}
+
+TEST_CASE("c99lc_bitset_set and test basic operations") {
+    c99lc_bitset* bitset = c99lc_bitset_create(64);
+    REQUIRE(bitset != nullptr);
+
+    // Set some bits
+    c99lc_bitset_set(bitset, 0);
+    c99lc_bitset_set(bitset, 7);
+    c99lc_bitset_set(bitset, 15);
+    c99lc_bitset_set(bitset, 31);
+    c99lc_bitset_set(bitset, 63);
+
+    // Test set bits
+    CHECK(c99lc_bitset_test(bitset, 0) == true);
+    CHECK(c99lc_bitset_test(bitset, 7) == true);
+    CHECK(c99lc_bitset_test(bitset, 15) == true);
+    CHECK(c99lc_bitset_test(bitset, 31) == true);
+    CHECK(c99lc_bitset_test(bitset, 63) == true);
+
+    // Test unset bits
+    CHECK(c99lc_bitset_test(bitset, 1) == false);
+    CHECK(c99lc_bitset_test(bitset, 8) == false);
+    CHECK(c99lc_bitset_test(bitset, 16) == false);
+    CHECK(c99lc_bitset_test(bitset, 32) == false);
+
+    c99lc_bitset_destroy(bitset);
+}
+
+TEST_CASE("c99lc_bitset_clear operations") {
+    c99lc_bitset* bitset = c99lc_bitset_create(32);
+    REQUIRE(bitset != nullptr);
+
+    // Set multiple bits
+    for (size_t i = 0; i < 32; ++i) {
+        c99lc_bitset_set(bitset, i);
+    }
+
+    // Verify all bits are set
+    for (size_t i = 0; i < 32; ++i) {
+        CHECK(c99lc_bitset_test(bitset, i) == true);
+    }
+
+    // Clear some bits
+    c99lc_bitset_clear(bitset, 0);
+    c99lc_bitset_clear(bitset, 15);
+    c99lc_bitset_clear(bitset, 31);
+
+    // Check cleared bits
+    CHECK(c99lc_bitset_test(bitset, 0) == false);
+    CHECK(c99lc_bitset_test(bitset, 15) == false);
+    CHECK(c99lc_bitset_test(bitset, 31) == false);
+
+    // Check remaining set bits
+    CHECK(c99lc_bitset_test(bitset, 1) == true);
+    CHECK(c99lc_bitset_test(bitset, 16) == true);
+    CHECK(c99lc_bitset_test(bitset, 30) == true);
+
+    c99lc_bitset_destroy(bitset);
+}
+
+TEST_CASE("c99lc_bitset handles non-power-of-8 capacities") {
+    c99lc_bitset* bitset = c99lc_bitset_create(101);
+    REQUIRE(bitset != nullptr);
+    CHECK(bitset->bits_capacity == 101);
+    CHECK(bitset->bytes_capacity == 13); // ceil(101/8) = 13
+
+    // Test edge bits
+    c99lc_bitset_set(bitset, 0);
+    c99lc_bitset_set(bitset, 100);
+
+    CHECK(c99lc_bitset_test(bitset, 0) == true);
+    CHECK(c99lc_bitset_test(bitset, 100) == true);
+    CHECK(c99lc_bitset_test(bitset, 50) == false);
+
+    c99lc_bitset_destroy(bitset);
+}
+
+TEST_CASE("c99lc_bitset_destroy handles NULL gracefully") {
+    c99lc_bitset_destroy(nullptr);
+    // Should not crash
+    CHECK(true);
+}
+
+TEST_CASE("c99lc_bitset used in LeetCode 1748 style problem (sum of unique)") {
+    // Simulates the sumOfUnique problem from todo.md
+    int nums[] = {1, 2, 3, 2};
+    int numsSize = 4;
+
+    c99lc_bitset* seen = c99lc_bitset_create(101);
+    c99lc_bitset* removed = c99lc_bitset_create(101);
+    REQUIRE(seen != nullptr);
+    REQUIRE(removed != nullptr);
+
+    int sum = 0;
+    for (int i = 0; i < numsSize; i++) {
+        if (!c99lc_bitset_test(seen, nums[i])) {
+            c99lc_bitset_set(seen, nums[i]);
+            sum += nums[i];
+        } else {
+            if (!c99lc_bitset_test(removed, nums[i])) {
+                sum -= nums[i];
+                c99lc_bitset_set(removed, nums[i]);
+            }
+        }
+    }
+
+    CHECK(sum == 4); // Only 1 and 3 are unique, 2 appears twice
+
+    c99lc_bitset_destroy(seen);
+    c99lc_bitset_destroy(removed);
+}
+
+TEST_CASE("c99lc_bitset multiple set operations on same bit are idempotent") {
+    c99lc_bitset* bitset = c99lc_bitset_create(8);
+    REQUIRE(bitset != nullptr);
+
+    c99lc_bitset_set(bitset, 3);
+    c99lc_bitset_set(bitset, 3);
+    c99lc_bitset_set(bitset, 3);
+
+    CHECK(c99lc_bitset_test(bitset, 3) == true);
+
+    c99lc_bitset_clear(bitset, 3);
+    c99lc_bitset_clear(bitset, 3);
+
+    CHECK(c99lc_bitset_test(bitset, 3) == false);
+
+    c99lc_bitset_destroy(bitset);
+}

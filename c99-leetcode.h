@@ -243,6 +243,43 @@ C99_LEETCODE_PUBLIC_DECL bool c99lc_stack_char_fla_push(c99lc_stack_char_fla* st
    Returns true on success, false if stack is NULL, empty, or out is NULL. */
 C99_LEETCODE_PUBLIC_DECL bool c99lc_stack_char_fla_pop(c99lc_stack_char_fla* stack, char* out);
 
+/* Bitset utilities */
+
+/* Compact bitset using uint8_t array with flexible array member.
+   Stores bits packed into bytes, providing efficient storage for boolean flags.
+   Bit indices are zero-based; bit i resides in items[i/8] at position (i%8). */
+typedef struct c99lc_bitset {
+    size_t bytes_capacity; /* number of bytes allocated in items[] */
+    size_t bits_capacity; /* maximum number of bits that can be stored */
+    uint8_t items[]; /* flexible array member for bit storage */
+} c99lc_bitset;
+
+/* Creates a bitset capable of storing up to bits_capacity bits.
+   All bits are initialized to 0.
+   Returns NULL on allocation failure or if bits_capacity is 0.
+   Complexity: O(n) where n = (bits_capacity + 7) / 8. */
+C99_LEETCODE_PUBLIC_DECL c99lc_bitset* c99lc_bitset_create(size_t bits_capacity);
+
+/* Destroys a bitset and frees its memory.
+   Safe to call with NULL pointer. */
+C99_LEETCODE_PUBLIC_DECL void c99lc_bitset_destroy(c99lc_bitset* bitset);
+
+/* Tests whether the bit at bit_index is set (1) or clear (0).
+   Returns true if the bit is set, false otherwise.
+   Behavior is undefined if bit_index >= bitset->bits_capacity or bitset is NULL.
+   Complexity: O(1). */
+C99_LEETCODE_PUBLIC_DECL bool c99lc_bitset_test(const c99lc_bitset* bitset, size_t bit_index);
+
+/* Sets the bit at bit_index to 1.
+   Behavior is undefined if bit_index >= bitset->bits_capacity or bitset is NULL.
+   Complexity: O(1). */
+C99_LEETCODE_PUBLIC_DECL void c99lc_bitset_set(c99lc_bitset* bitset, size_t bit_index);
+
+/* Clears the bit at bit_index to 0.
+   Behavior is undefined if bit_index >= bitset->bits_capacity or bitset is NULL.
+   Complexity: O(1). */
+C99_LEETCODE_PUBLIC_DECL void c99lc_bitset_clear(c99lc_bitset* bitset, size_t bit_index);
+
 /* String utilities */
 
 /* Converts source string to camelCase by capitalizing letters after spaces and lowercasing others.
@@ -676,6 +713,50 @@ C99_LEETCODE_PUBLIC_DEF bool c99lc_stack_char_fla_pop(c99lc_stack_char_fla* stac
     stack->count--;
     *out = stack->items[stack->count];
     return true;
+}
+
+/* ---- Bitset utilities implementation ----------------------------------- */
+
+C99_LEETCODE_PUBLIC_DEF c99lc_bitset* c99lc_bitset_create(size_t bits_capacity) {
+    if (bits_capacity == 0) return NULL;
+
+    const size_t bits_in_byte = 8;
+    const size_t bytes_capacity = (bits_capacity + bits_in_byte - 1) / bits_in_byte;
+
+    c99lc_bitset* bitset = (c99lc_bitset*)C99_LEETCODE_MALLOC(NULL,
+        sizeof(c99lc_bitset) + bytes_capacity * sizeof(uint8_t));
+
+    if (bitset) {
+        bitset->bytes_capacity = bytes_capacity;
+        bitset->bits_capacity = bits_capacity;
+        /* Initialize all bits to 0 */
+        for (size_t i = 0; i < bytes_capacity; ++i) {
+            bitset->items[i] = 0;
+        }
+    }
+    return bitset;
+}
+
+C99_LEETCODE_PUBLIC_DEF void c99lc_bitset_destroy(c99lc_bitset* bitset) {
+    if (bitset) { C99_LEETCODE_FREE(NULL, bitset); }
+}
+
+C99_LEETCODE_PUBLIC_DEF bool c99lc_bitset_test(const c99lc_bitset* bitset, size_t bit_index) {
+    const size_t byte_index = bit_index / 8;
+    const size_t bit_position = bit_index % 8;
+    return (bitset->items[byte_index] >> bit_position) & 1;
+}
+
+C99_LEETCODE_PUBLIC_DEF void c99lc_bitset_set(c99lc_bitset* bitset, size_t bit_index) {
+    const size_t byte_index = bit_index / 8;
+    const size_t bit_position = bit_index % 8;
+    bitset->items[byte_index] |= (uint8_t)(1 << bit_position);
+}
+
+C99_LEETCODE_PUBLIC_DEF void c99lc_bitset_clear(c99lc_bitset* bitset, size_t bit_index) {
+    const size_t byte_index = bit_index / 8;
+    const size_t bit_position = bit_index % 8;
+    bitset->items[byte_index] &= (uint8_t)(~(1 << bit_position));
 }
 
 /* ---- Character classification helpers implementation ------------------- */
