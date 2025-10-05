@@ -213,6 +213,42 @@ C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_add_lsb_first(const unsigned 
     size_t out_cap,
     size_t* out_size);
 
+/* Comparison function for int arrays compatible with qsort and bsearch.
+   Returns negative if *a < *b, zero if *a == *b, positive if *a > *b.
+   Avoids overflow by using subtraction comparison idiom.
+   Example: qsort(array, size, sizeof(int), c99lc_array_int_compare);
+   Complexity: O(1). */
+C99_LEETCODE_PUBLIC_DECL int c99lc_array_int_compare(const void* a, const void* b);
+
+/* Removes consecutive duplicate elements from a sorted int array in place.
+   Input: array[0..size) must be sorted in ascending order.
+   Output: Unique elements are compacted at the beginning of array.
+   Returns: The new size (count of distinct elements).
+   Behavior:
+       - Returns 0 if array is NULL or size is 0.
+       - Returns 1 if size is 1.
+       - Does not modify elements beyond the returned size.
+   Example: [1,1,2,3,3,3,4] becomes [1,2,3,4] and returns 4.
+   Complexity: O(n) where n is size. */
+C99_LEETCODE_PUBLIC_DECL size_t c99lc_array_int_dedup_sorted(int* array, size_t size);
+
+/* Finds elements in source that are not present in sorted_lookup array.
+   Inputs:
+       - source[0..source_size): Array to search in.
+       - sorted_lookup[0..lookup_size): Sorted array of values to exclude.
+       - out[0..source_size): Destination buffer for difference elements.
+   Output:
+       - Writes elements from source not found in sorted_lookup into out.
+       - Returns the count of elements written to out.
+   Behavior:
+       - Returns 0 if source is NULL, source_size is 0, or sorted_lookup is NULL.
+       - sorted_lookup must be sorted in ascending order for correct results.
+       - Uses binary search for efficient lookup (O(log m) per element).
+   Example: source=[1,2,3,4], sorted_lookup=[2,4] -> out=[1,3], returns 2.
+   Complexity: O(n log m) where n=source_size, m=lookup_size. */
+C99_LEETCODE_PUBLIC_DECL size_t c99lc_array_int_diff(
+    const int* source, size_t source_size, const int* sorted_lookup, size_t lookup_size, int* out);
+
 /* Stack utilities */
 
 /* Fixed-capacity character stack using flexible array member.
@@ -834,6 +870,41 @@ C99_LEETCODE_PUBLIC_DEF void c99lc_array_int_interleave_halves(int* dst, const i
         *out++ = xs[i];
         *out++ = ys[i];
     }
+}
+
+/* Array comparison, deduplication, and diff utilities */
+C99_LEETCODE_PUBLIC_DEF int c99lc_array_int_compare(const void* a, const void* b) {
+    const int* ia = (const int*)a;
+    const int* ib = (const int*)b;
+    /* Avoid overflow: use comparison idiom instead of subtraction */
+    return (*ia > *ib) - (*ia < *ib);
+}
+
+C99_LEETCODE_PUBLIC_DEF size_t c99lc_array_int_dedup_sorted(int* array, size_t size) {
+    if (!array || size == 0u) return 0u;
+    if (size == 1u) return 1u;
+
+    size_t write_index = 0u;
+    for (size_t read_index = 1u; read_index < size; ++read_index) {
+        if (array[read_index] != array[write_index]) {
+            ++write_index;
+            array[write_index] = array[read_index];
+        }
+    }
+    return write_index + 1u;
+}
+
+C99_LEETCODE_PUBLIC_DEF size_t c99lc_array_int_diff(
+    const int* source, size_t source_size, const int* sorted_lookup, size_t lookup_size, int* out) {
+    if (!source || source_size == 0u || !sorted_lookup) return 0u;
+
+    size_t out_count = 0u;
+    for (size_t i = 0u; i < source_size; ++i) {
+        const void* found =
+            bsearch(&source[i], sorted_lookup, lookup_size, sizeof(int), c99lc_array_int_compare);
+        if (!found) { out[out_count++] = source[i]; }
+    }
+    return out_count;
 }
 
 /* Parsing */

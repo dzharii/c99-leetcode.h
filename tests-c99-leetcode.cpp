@@ -687,3 +687,180 @@ TEST_CASE("c99lc_bitset multiple set operations on same bit are idempotent") {
 
     c99lc_bitset_destroy(bitset);
 }
+
+TEST_CASE("c99lc_array_int_compare works with qsort") {
+    int array[] = {5, 2, 8, 1, 9, 3};
+    const size_t size = sizeof(array) / sizeof(array[0]);
+
+    qsort(array, size, sizeof(int), c99lc_array_int_compare);
+
+    CHECK(array[0] == 1);
+    CHECK(array[1] == 2);
+    CHECK(array[2] == 3);
+    CHECK(array[3] == 5);
+    CHECK(array[4] == 8);
+    CHECK(array[5] == 9);
+}
+
+TEST_CASE("c99lc_array_int_compare direct comparisons") {
+    int a = 5, b = 10, c = 5;
+
+    CHECK(c99lc_array_int_compare(&a, &b) < 0); // a < b
+    CHECK(c99lc_array_int_compare(&b, &a) > 0); // b > a
+    CHECK(c99lc_array_int_compare(&a, &c) == 0); // a == c
+}
+
+TEST_CASE("c99lc_array_int_compare works with negative numbers") {
+    int a = -10, b = -5, c = 0, d = 5;
+
+    CHECK(c99lc_array_int_compare(&a, &b) < 0); // -10 < -5
+    CHECK(c99lc_array_int_compare(&b, &c) < 0); // -5 < 0
+    CHECK(c99lc_array_int_compare(&c, &d) < 0); // 0 < 5
+    CHECK(c99lc_array_int_compare(&d, &a) > 0); // 5 > -10
+}
+
+TEST_CASE("c99lc_array_int_dedup_sorted basic functionality") {
+    int array[] = {1, 1, 2, 3, 3, 3, 4};
+    size_t new_size = c99lc_array_int_dedup_sorted(array, 7);
+
+    CHECK(new_size == 4);
+    CHECK(array[0] == 1);
+    CHECK(array[1] == 2);
+    CHECK(array[2] == 3);
+    CHECK(array[3] == 4);
+}
+
+TEST_CASE("c99lc_array_int_dedup_sorted no duplicates") {
+    int array[] = {1, 2, 3, 4, 5};
+    size_t new_size = c99lc_array_int_dedup_sorted(array, 5);
+
+    CHECK(new_size == 5);
+    CHECK(array[0] == 1);
+    CHECK(array[1] == 2);
+    CHECK(array[2] == 3);
+    CHECK(array[3] == 4);
+    CHECK(array[4] == 5);
+}
+
+TEST_CASE("c99lc_array_int_dedup_sorted all duplicates") {
+    int array[] = {7, 7, 7, 7};
+    size_t new_size = c99lc_array_int_dedup_sorted(array, 4);
+
+    CHECK(new_size == 1);
+    CHECK(array[0] == 7);
+}
+
+TEST_CASE("c99lc_array_int_dedup_sorted edge cases") {
+    int single[] = {42};
+    CHECK(c99lc_array_int_dedup_sorted(single, 1) == 1);
+    CHECK(single[0] == 42);
+
+    CHECK(c99lc_array_int_dedup_sorted(nullptr, 10) == 0);
+    CHECK(c99lc_array_int_dedup_sorted(single, 0) == 0);
+}
+
+TEST_CASE("c99lc_array_int_diff basic functionality") {
+    int source[] = {1, 2, 3, 4, 5};
+    int lookup[] = {2, 4}; // sorted
+    int out[5];
+
+    size_t count = c99lc_array_int_diff(source, 5, lookup, 2, out);
+
+    CHECK(count == 3);
+    CHECK(out[0] == 1);
+    CHECK(out[1] == 3);
+    CHECK(out[2] == 5);
+}
+
+TEST_CASE("c99lc_array_int_diff no differences") {
+    int source[] = {1, 2, 3};
+    int lookup[] = {1, 2, 3, 4, 5}; // sorted
+    int out[3];
+
+    size_t count = c99lc_array_int_diff(source, 3, lookup, 5, out);
+
+    CHECK(count == 0);
+}
+
+TEST_CASE("c99lc_array_int_diff all differences") {
+    int source[] = {1, 2, 3};
+    int lookup[] = {4, 5, 6}; // sorted
+    int out[3];
+
+    size_t count = c99lc_array_int_diff(source, 3, lookup, 3, out);
+
+    CHECK(count == 3);
+    CHECK(out[0] == 1);
+    CHECK(out[1] == 2);
+    CHECK(out[2] == 3);
+}
+
+TEST_CASE("c99lc_array_int_diff edge cases") {
+    int source[] = {1, 2, 3};
+    int lookup[] = {2};
+    int out[3];
+
+    CHECK(c99lc_array_int_diff(nullptr, 3, lookup, 1, out) == 0);
+    CHECK(c99lc_array_int_diff(source, 0, lookup, 1, out) == 0);
+    CHECK(c99lc_array_int_diff(source, 3, nullptr, 1, out) == 0);
+}
+
+TEST_CASE("c99lc_array_int_diff with negative numbers") {
+    int source[] = {-5, -2, 0, 3, 7};
+    int lookup[] = {-2, 3}; // sorted
+    int out[5];
+
+    size_t count = c99lc_array_int_diff(source, 5, lookup, 2, out);
+
+    CHECK(count == 3);
+    CHECK(out[0] == -5);
+    CHECK(out[1] == 0);
+    CHECK(out[2] == 7);
+}
+
+TEST_CASE("LeetCode 2215 findDifference using new helpers") {
+    // Simulates the findDifference problem from todo.md
+    int nums1[] = {1, 2, 3, 3};
+    int nums2[] = {1, 1, 2, 2};
+    size_t nums1Size = 4;
+    size_t nums2Size = 4;
+
+    // Sort both arrays
+    qsort(nums1, nums1Size, sizeof(int), c99lc_array_int_compare);
+    qsort(nums2, nums2Size, sizeof(int), c99lc_array_int_compare);
+
+    // Deduplicate
+    nums1Size = c99lc_array_int_dedup_sorted(nums1, nums1Size);
+    nums2Size = c99lc_array_int_dedup_sorted(nums2, nums2Size);
+
+    // After dedup: nums1 = {1, 2, 3}, nums2 = {1, 2}
+
+    // Find differences
+    int result1[3];
+    int result2[2];
+    size_t result1Size = c99lc_array_int_diff(nums1, nums1Size, nums2, nums2Size, result1);
+    size_t result2Size = c99lc_array_int_diff(nums2, nums2Size, nums1, nums1Size, result2);
+
+    // result1 should contain elements in nums1 not in nums2: {3}
+    CHECK(result1Size == 1);
+    CHECK(result1[0] == 3);
+
+    // result2 should contain elements in nums2 not in nums1: {} (empty)
+    CHECK(result2Size == 0);
+}
+
+TEST_CASE("c99lc_array_int_diff works with bsearch correctly") {
+    // Test that ensures bsearch is working properly
+    int source[] = {10, 20, 30, 40, 50};
+    int lookup[] = {5, 15, 25, 35, 45}; // sorted, no overlap
+    int out[5];
+
+    size_t count = c99lc_array_int_diff(source, 5, lookup, 5, out);
+
+    CHECK(count == 5);
+    CHECK(out[0] == 10);
+    CHECK(out[1] == 20);
+    CHECK(out[2] == 30);
+    CHECK(out[3] == 40);
+    CHECK(out[4] == 50);
+}
